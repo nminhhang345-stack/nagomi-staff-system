@@ -273,7 +273,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div style={pageWrap}>
-        <div style={cardStyle}>Loading...</div>
+        <div style={shellCard}>Loading...</div>
       </div>
     );
   }
@@ -281,10 +281,11 @@ export default function AdminPage() {
   if (!user) {
     return (
       <div style={pageWrap}>
-        <div style={cardStyle}>
-          <h2>Admin Access</h2>
-          <p>You need to log in first.</p>
-          <button style={primaryBtn} onClick={() => (window.location.href = "/")}>
+        <div style={shellCard}>
+          <div style={pearlBadge}>◌</div>
+          <h1 style={titleStyle}>Admin Access</h1>
+          <p style={subtitleStyle}>You need to log in first.</p>
+          <button style={mainBlueBtn} onClick={() => (window.location.href = "/")}>
             Go to Login
           </button>
         </div>
@@ -295,10 +296,14 @@ export default function AdminPage() {
   if (!myProfile || myProfile.role !== "admin") {
     return (
       <div style={pageWrap}>
-        <div style={cardStyle}>
-          <h2>Access Denied</h2>
-          <p>This page is only for admins.</p>
-          <button style={secondaryBtn} onClick={() => (window.location.href = "/")}>
+        <div style={shellCard}>
+          <div style={pearlBadge}>◌</div>
+          <h1 style={titleStyle}>Access Denied</h1>
+          <p style={subtitleStyle}>This page is only for admins.</p>
+          <button
+            style={softPearlBtn}
+            onClick={() => (window.location.href = "/")}
+          >
             Back to Staff Page
           </button>
         </div>
@@ -308,82 +313,76 @@ export default function AdminPage() {
 
   return (
     <div style={pageWrap}>
-      <div style={{ ...cardStyle, width: 1100, maxWidth: "95vw" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-            gap: 16,
-            flexWrap: "wrap",
-          }}
-        >
+      <div style={adminContainer}>
+        <div style={topBar}>
           <div>
-            <h1 style={{ margin: 0 }}>Admin Dashboard</h1>
-            <p style={{ margin: "8px 0 0 0", color: "#555" }}>
-              Welcome, {myProfile.name || user.email}
-            </p>
+            <div style={smallLabel}>Admin</div>
+            <div style={staffName}>{myProfile.name || user.email}</div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div style={topButtonGroup}>
             <button
-              style={filter === "all" ? activeFilterBtn : filterBtn}
-              onClick={() => setFilter("all")}
-            >
-              All Time
-            </button>
-            <button
-              style={filter === "today" ? activeFilterBtn : filterBtn}
-              onClick={() => setFilter("today")}
-            >
-              Today
-            </button>
-            <button
-              style={filter === "week" ? activeFilterBtn : filterBtn}
-              onClick={() => setFilter("week")}
-            >
-              This Week
-            </button>
-            <button
-              style={filter === "month" ? activeFilterBtn : filterBtn}
-              onClick={() => setFilter("month")}
-            >
-              This Month
-            </button>
-            <button
-              style={secondaryBtn}
+              style={logoutBtn}
               onClick={() => (window.location.href = "/")}
             >
               Staff Page
             </button>
-            <button style={secondaryBtn} onClick={handleLogout}>
+            <button style={logoutBtn} onClick={handleLogout}>
               Log Out
             </button>
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: 16,
-            marginBottom: 28,
-          }}
-        >
-          <div style={summaryCard}>
-            <div style={summaryLabel}>Filtered Staff</div>
-            <div style={summaryValue}>{summaryByStaff.length}</div>
+        <div style={heroCard}>
+          <div style={heroGlow} />
+          <div style={pearlBadgeLarge}>◌</div>
+          <h1 style={heroTitle}>Pearl Admin</h1>
+          <p style={heroSubtitle}>
+            Elegant control over attendance, salary and staff flow.
+          </p>
+        </div>
+
+        <div style={filterWrap}>
+          <button
+            style={filter === "all" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("all")}
+          >
+            All Time
+          </button>
+          <button
+            style={filter === "today" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("today")}
+          >
+            Today
+          </button>
+          <button
+            style={filter === "week" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("week")}
+          >
+            This Week
+          </button>
+          <button
+            style={filter === "month" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("month")}
+          >
+            This Month
+          </button>
+        </div>
+
+        <div style={statGrid}>
+          <div style={statCard}>
+            <div style={statLabel}>Filtered Staff</div>
+            <div style={statValue}>{summaryByStaff.length}</div>
           </div>
 
-          <div style={summaryCard}>
-            <div style={summaryLabel}>Filtered Logs</div>
-            <div style={summaryValue}>{filteredLogs.length}</div>
+          <div style={statCard}>
+            <div style={statLabel}>Filtered Logs</div>
+            <div style={statValue}>{filteredLogs.length}</div>
           </div>
 
-          <div style={summaryCard}>
-            <div style={summaryLabel}>Filtered Payroll</div>
-            <div style={summaryValue}>
+          <div style={statCard}>
+            <div style={statLabel}>Filtered Payroll</div>
+            <div style={statValue}>
               {summaryByStaff
                 .reduce((sum, item) => sum + item.totalSalary, 0)
                 .toLocaleString()}{" "}
@@ -392,201 +391,204 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <h2 style={{ marginBottom: 12 }}>Salary Summary by Staff</h2>
+        <div style={sectionCard}>
+          <div style={sectionTitle}>Salary Summary by Staff</div>
 
-        <div style={{ overflowX: "auto", marginBottom: 32 }}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Staff</th>
-                <th style={thStyle}>Hourly Rate</th>
-                <th style={thStyle}>Total Hours</th>
-                <th style={thStyle}>Total Salary</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summaryByStaff.map((item) => (
-                <tr key={item.name}>
-                  <td style={tdStyle}>{item.name}</td>
-                  <td style={tdStyle}>{item.hourlyRate.toLocaleString()} VND</td>
-                  <td style={tdStyle}>{item.totalHours.toFixed(2)} hrs</td>
-                  <td style={tdStyle}>{item.totalSalary.toLocaleString()} VND</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <h2 style={{ marginBottom: 12 }}>Attendance Logs</h2>
-
-        <div style={{ display: "grid", gap: 16 }}>
-          {filteredLogs.length === 0 ? (
-            <div style={emptyBox}>No attendance logs for this filter.</div>
+          {summaryByStaff.length === 0 ? (
+            <div style={emptyCard}>No payroll data for this filter.</div>
           ) : (
-            filteredLogs.map((log) => {
-              const checkIn = log.check_in_time
-                ? new Date(log.check_in_time)
-                : null;
-              const checkOut = log.check_out_time
-                ? new Date(log.check_out_time)
-                : null;
-
-              const hourlyRate = log.profile?.hourly_rate || 25000;
-
-              let hours: number | null = null;
-              let salary: number | null = null;
-
-              if (checkIn && checkOut) {
-                const diff =
-                  (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
-                hours = diff;
-                salary = diff * hourlyRate;
-              }
-
-              const isEditing = editingId === log.id;
-
-              return (
-                <div key={log.id} style={logCard}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1.3fr 1fr",
-                      gap: 20,
-                    }}
-                  >
-                    <div>
-                      <p style={pStyle}>
-                        <strong>Staff:</strong>{" "}
-                        {log.profile?.name || "Unknown staff"}
-                      </p>
-                      <p style={pStyle}>
-                        <strong>Hourly Rate:</strong>{" "}
-                        {hourlyRate.toLocaleString()} VND/hour
-                      </p>
-
-                      {!isEditing ? (
-                        <>
-                          <p style={pStyle}>
-                            <strong>Check In:</strong>{" "}
-                            {checkIn ? checkIn.toLocaleString() : "-"}
-                          </p>
-                          <p style={pStyle}>
-                            <strong>Check Out:</strong>{" "}
-                            {checkOut ? checkOut.toLocaleString() : "Still working"}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <div style={{ marginBottom: 10 }}>
-                            <label style={labelStyle}>Check In</label>
-                            <input
-                              type="datetime-local"
-                              value={editCheckIn}
-                              onChange={(e) => setEditCheckIn(e.target.value)}
-                              style={inputStyle}
-                            />
-                          </div>
-
-                          <div style={{ marginBottom: 10 }}>
-                            <label style={labelStyle}>Check Out</label>
-                            <input
-                              type="datetime-local"
-                              value={editCheckOut}
-                              onChange={(e) => setEditCheckOut(e.target.value)}
-                              style={inputStyle}
-                            />
-                          </div>
-                        </>
-                      )}
-
-                      <p style={pStyle}>
-                        <strong>Hours:</strong>{" "}
-                        {hours !== null ? `${hours.toFixed(2)} hrs` : "In progress"}
-                      </p>
-                      <p style={pStyle}>
-                        <strong>Salary:</strong>{" "}
-                        {salary !== null ? `${salary.toLocaleString()} VND` : "-"}
-                      </p>
-
-                      <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-                        {!isEditing ? (
-                          <>
-                            <button
-                              style={smallEditBtn}
-                              onClick={() => startEdit(log)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              style={smallDeleteBtn}
-                              onClick={() => deleteLog(log.id)}
-                            >
-                              Delete
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              style={smallSaveBtn}
-                              onClick={() => saveEdit(log.id)}
-                              disabled={savingId === log.id}
-                            >
-                              {savingId === log.id ? "Saving..." : "Save"}
-                            </button>
-                            <button style={smallCancelBtn} onClick={cancelEdit}>
-                              Cancel
-                            </button>
-                          </>
-                        )}
-                      </div>
+            <div style={{ display: "grid", gap: 12 }}>
+              {summaryByStaff.map((item) => (
+                <div key={item.name} style={summaryRowCard}>
+                  <div style={summaryName}>{item.name}</div>
+                  <div style={summaryMeta}>
+                    <div style={summaryMetaItem}>
+                      <span style={summaryMetaLabel}>Rate</span>
+                      <span style={summaryMetaValue}>
+                        {item.hourlyRate.toLocaleString()} VND
+                      </span>
                     </div>
-
-                    <div>
-                      {log.check_in_image_url ? (
-                        <div style={{ marginBottom: 14 }}>
-                          <p style={{ margin: "0 0 8px 0", fontWeight: 600 }}>
-                            Check-in photo
-                          </p>
-                          <img
-                            src={log.check_in_image_url}
-                            alt="check-in"
-                            style={{
-                              width: "100%",
-                              borderRadius: 12,
-                              border: "1px solid #eee",
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{ ...emptyPhoto, marginBottom: 14 }}>
-                          No check-in photo
-                        </div>
-                      )}
-
-                      {log.check_out_image_url ? (
-                        <div>
-                          <p style={{ margin: "0 0 8px 0", fontWeight: 600 }}>
-                            Check-out photo
-                          </p>
-                          <img
-                            src={log.check_out_image_url}
-                            alt="check-out"
-                            style={{
-                              width: "100%",
-                              borderRadius: 12,
-                              border: "1px solid #eee",
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div style={emptyPhoto}>No check-out photo</div>
-                      )}
+                    <div style={summaryMetaItem}>
+                      <span style={summaryMetaLabel}>Hours</span>
+                      <span style={summaryMetaValue}>
+                        {item.totalHours.toFixed(2)} hrs
+                      </span>
+                    </div>
+                    <div style={summaryMetaItem}>
+                      <span style={summaryMetaLabel}>Salary</span>
+                      <span style={summaryMetaValue}>
+                        {item.totalSalary.toLocaleString()} VND
+                      </span>
                     </div>
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
           )}
+        </div>
+
+        <div style={sectionCard}>
+          <div style={sectionTitle}>Attendance Logs</div>
+
+          <div style={{ display: "grid", gap: 16, marginTop: 14 }}>
+            {filteredLogs.length === 0 ? (
+              <div style={emptyCard}>No attendance logs for this filter.</div>
+            ) : (
+              filteredLogs.map((log) => {
+                const checkIn = log.check_in_time
+                  ? new Date(log.check_in_time)
+                  : null;
+                const checkOut = log.check_out_time
+                  ? new Date(log.check_out_time)
+                  : null;
+
+                const hourlyRate = log.profile?.hourly_rate || 25000;
+
+                let hours: number | null = null;
+                let salary: number | null = null;
+
+                if (checkIn && checkOut) {
+                  const diff =
+                    (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
+                  hours = diff;
+                  salary = diff * hourlyRate;
+                }
+
+                const isEditing = editingId === log.id;
+
+                return (
+                  <div key={log.id} style={logCard}>
+                    <div style={logHeader}>
+                      <div>
+                        <div style={logStaffName}>
+                          {log.profile?.name || "Unknown staff"}
+                        </div>
+                        <div style={logStaffSub}>
+                          {hourlyRate.toLocaleString()} VND/hour
+                        </div>
+                      </div>
+                    </div>
+
+                    {!isEditing ? (
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <div style={logRow}>
+                          <span style={logLabel}>Check In</span>
+                          <span style={logValue}>
+                            {checkIn ? checkIn.toLocaleString() : "-"}
+                          </span>
+                        </div>
+
+                        <div style={logRow}>
+                          <span style={logLabel}>Check Out</span>
+                          <span style={logValue}>
+                            {checkOut ? checkOut.toLocaleString() : "Still working"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "grid", gap: 12 }}>
+                        <div>
+                          <label style={labelStyle}>Check In</label>
+                          <input
+                            type="datetime-local"
+                            value={editCheckIn}
+                            onChange={(e) => setEditCheckIn(e.target.value)}
+                            style={inputStyle}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={labelStyle}>Check Out</label>
+                          <input
+                            type="datetime-local"
+                            value={editCheckOut}
+                            onChange={(e) => setEditCheckOut(e.target.value)}
+                            style={inputStyle}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+                      <div style={logRow}>
+                        <span style={logLabel}>Hours</span>
+                        <span style={logValue}>
+                          {hours !== null ? `${hours.toFixed(2)} hrs` : "In progress"}
+                        </span>
+                      </div>
+
+                      <div style={logRow}>
+                        <span style={logLabel}>Salary</span>
+                        <span style={logValue}>
+                          {salary !== null ? `${salary.toLocaleString()} VND` : "-"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={actionRow}>
+                      {!isEditing ? (
+                        <>
+                          <button
+                            style={smallBlueBtn}
+                            onClick={() => startEdit(log)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            style={smallDeleteBtn}
+                            onClick={() => deleteLog(log.id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            style={smallSaveBtn}
+                            onClick={() => saveEdit(log.id)}
+                            disabled={savingId === log.id}
+                          >
+                            {savingId === log.id ? "Saving..." : "Save"}
+                          </button>
+                          <button style={smallCancelBtn} onClick={cancelEdit}>
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    <div style={imageGrid}>
+                      <div style={imageCard}>
+                        <div style={imageLabel}>Check-in photo</div>
+                        {log.check_in_image_url ? (
+                          <img
+                            src={log.check_in_image_url}
+                            alt="check-in"
+                            style={previewImage}
+                          />
+                        ) : (
+                          <div style={emptyPhoto}>No check-in photo</div>
+                        )}
+                      </div>
+
+                      <div style={imageCard}>
+                        <div style={imageLabel}>Check-out photo</div>
+                        {log.check_out_image_url ? (
+                          <img
+                            src={log.check_out_image_url}
+                            alt="check-out"
+                            style={previewImage}
+                          />
+                        ) : (
+                          <div style={emptyPhoto}>No check-out photo</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -595,169 +597,453 @@ export default function AdminPage() {
 
 const pageWrap: React.CSSProperties = {
   minHeight: "100vh",
-  backgroundColor: "#f5f5f5",
-  padding: 24,
-  fontFamily: "Arial, sans-serif",
-};
-
-const cardStyle: React.CSSProperties = {
-  background: "white",
-  borderRadius: 18,
-  padding: 24,
-  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-  margin: "0 auto",
-};
-
-const summaryCard: React.CSSProperties = {
-  background: "#fafafa",
-  border: "1px solid #eee",
-  borderRadius: 14,
   padding: 18,
+  background:
+    "linear-gradient(180deg, #dff4ff 0%, #cdefff 24%, #b7e4fa 55%, #eef8ff 100%)",
+  fontFamily: "'Georgia', 'Times New Roman', serif",
+  display: "flex",
+  justifyContent: "center",
 };
 
-const summaryLabel: React.CSSProperties = {
-  fontSize: 14,
-  color: "#666",
-  marginBottom: 8,
+const adminContainer: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 980,
+  padding: 6,
 };
 
-const summaryValue: React.CSSProperties = {
-  fontSize: 24,
+const shellCard: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 460,
+  marginTop: 40,
+  background: "rgba(255,255,255,0.68)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  border: "1px solid rgba(255,255,255,0.6)",
+  boxShadow: "0 20px 60px rgba(67, 143, 184, 0.18)",
+  borderRadius: 28,
+  padding: 28,
+};
+
+const topBar: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 18,
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const topButtonGroup: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const smallLabel: React.CSSProperties = {
+  fontSize: 12,
+  color: "#5d7c8d",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+};
+
+const staffName: React.CSSProperties = {
+  fontSize: 22,
+  color: "#15384b",
   fontWeight: 700,
 };
 
-const tableStyle: React.CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-  background: "white",
-  border: "1px solid #eee",
+const logoutBtn: React.CSSProperties = {
+  border: "none",
+  background: "rgba(255,255,255,0.65)",
+  color: "#22506a",
+  borderRadius: 999,
+  padding: "10px 14px",
+  fontSize: 14,
+  boxShadow: "0 8px 20px rgba(84, 140, 170, 0.14)",
+  cursor: "pointer",
 };
 
-const thStyle: React.CSSProperties = {
-  textAlign: "left",
+const heroCard: React.CSSProperties = {
+  position: "relative",
+  overflow: "hidden",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(222,245,255,0.9), rgba(181,227,248,0.95))",
+  borderRadius: 28,
+  padding: "28px 22px",
+  boxShadow: "0 18px 40px rgba(61, 128, 164, 0.18)",
+  border: "1px solid rgba(255,255,255,0.65)",
+  textAlign: "center",
+};
+
+const heroGlow: React.CSSProperties = {
+  position: "absolute",
+  width: 180,
+  height: 180,
+  right: -50,
+  top: -60,
+  borderRadius: "50%",
+  background: "rgba(255,255,255,0.55)",
+  filter: "blur(10px)",
+};
+
+const pearlBadge: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: "50%",
+  background: "linear-gradient(135deg, #fefefe, #e8f7ff, #d8edf8)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#79a7bc",
+  fontSize: 24,
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.16)",
+  marginBottom: 18,
+};
+
+const pearlBadgeLarge: React.CSSProperties = {
+  width: 68,
+  height: 68,
+  borderRadius: "50%",
+  margin: "0 auto 14px auto",
+  background: "linear-gradient(135deg, #ffffff, #e8f7ff, #cfe8f6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#7ca8bc",
+  fontSize: 34,
+  boxShadow: "0 14px 32px rgba(85, 145, 177, 0.18)",
+};
+
+const titleStyle: React.CSSProperties = {
+  margin: "0 0 8px 0",
+  fontSize: 34,
+  color: "#15384b",
+  textAlign: "center",
+  fontWeight: 700,
+};
+
+const subtitleStyle: React.CSSProperties = {
+  margin: "0 0 24px 0",
+  color: "#5f7d8e",
+  textAlign: "center",
+  fontSize: 15,
+  lineHeight: 1.5,
+};
+
+const heroTitle: React.CSSProperties = {
+  margin: 0,
+  fontSize: 34,
+  color: "#14384b",
+  fontWeight: 700,
+};
+
+const heroSubtitle: React.CSSProperties = {
+  margin: "10px 0 0 0",
+  color: "#557589",
+  fontSize: 16,
+  lineHeight: 1.5,
+};
+
+const filterWrap: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  marginTop: 18,
+  marginBottom: 18,
+};
+
+const statGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 12,
+  marginTop: 4,
+};
+
+const statCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 20,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const statLabel: React.CSSProperties = {
+  fontSize: 13,
+  color: "#67859a",
+  marginBottom: 6,
+};
+
+const statValue: React.CSSProperties = {
+  fontSize: 22,
+  color: "#173b4d",
+  fontWeight: 700,
+  lineHeight: 1.3,
+};
+
+const sectionCard: React.CSSProperties = {
+  marginTop: 18,
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 24,
+  padding: 18,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: 22,
+  color: "#173b4d",
+  fontWeight: 700,
+  marginBottom: 10,
+};
+
+const emptyCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 18,
+  padding: 18,
+  color: "#5e7d90",
+  border: "1px solid rgba(255,255,255,0.65)",
+};
+
+const summaryRowCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.78)",
+  borderRadius: 20,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.7)",
+  boxShadow: "0 12px 28px rgba(87, 145, 175, 0.10)",
+};
+
+const summaryName: React.CSSProperties = {
+  fontSize: 18,
+  fontWeight: 700,
+  color: "#173b4d",
+  marginBottom: 10,
+};
+
+const summaryMeta: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: 10,
+};
+
+const summaryMetaItem: React.CSSProperties = {
+  background: "rgba(244,251,255,0.9)",
+  borderRadius: 16,
   padding: 12,
-  borderBottom: "1px solid #eee",
-  backgroundColor: "#fafafa",
 };
 
-const tdStyle: React.CSSProperties = {
-  padding: 12,
-  borderBottom: "1px solid #eee",
+const summaryMetaLabel: React.CSSProperties = {
+  display: "block",
+  fontSize: 12,
+  color: "#66849a",
+  marginBottom: 4,
 };
 
-const emptyBox: React.CSSProperties = {
-  background: "white",
-  border: "1px dashed #ddd",
-  borderRadius: 12,
-  padding: 20,
-  color: "#666",
+const summaryMetaValue: React.CSSProperties = {
+  fontSize: 15,
+  color: "#173b4d",
+  fontWeight: 700,
 };
 
 const logCard: React.CSSProperties = {
-  background: "white",
-  border: "1px solid #eee",
-  borderRadius: 16,
+  background: "rgba(255,255,255,0.78)",
+  borderRadius: 22,
   padding: 16,
+  border: "1px solid rgba(255,255,255,0.7)",
+  boxShadow: "0 12px 28px rgba(87, 145, 175, 0.10)",
 };
 
-const pStyle: React.CSSProperties = {
-  margin: "0 0 8px 0",
+const logHeader: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 12,
 };
 
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  marginBottom: 6,
+const logStaffName: React.CSSProperties = {
+  fontSize: 20,
+  fontWeight: 700,
+  color: "#173b4d",
+};
+
+const logStaffSub: React.CSSProperties = {
+  fontSize: 13,
+  color: "#68859a",
+  marginTop: 3,
+};
+
+const logRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "8px 0",
+  borderBottom: "1px solid rgba(204, 228, 240, 0.7)",
+};
+
+const logLabel: React.CSSProperties = {
+  color: "#557389",
+  fontWeight: 700,
   fontSize: 14,
-  fontWeight: 600,
 };
 
-const inputStyle: React.CSSProperties = {
+const logValue: React.CSSProperties = {
+  color: "#183b4d",
+  fontSize: 14,
+  textAlign: "right",
+  maxWidth: "58%",
+};
+
+const actionRow: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  marginTop: 14,
+};
+
+const imageGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: 14,
+  marginTop: 16,
+};
+
+const imageCard: React.CSSProperties = {
+  background: "rgba(244,251,255,0.88)",
+  borderRadius: 18,
+  padding: 12,
+};
+
+const imageLabel: React.CSSProperties = {
+  color: "#557389",
+  fontWeight: 700,
+  marginBottom: 8,
+  fontSize: 14,
+};
+
+const previewImage: React.CSSProperties = {
   width: "100%",
-  padding: 10,
-  borderRadius: 8,
-  border: "1px solid #ccc",
-};
-
-const primaryBtn: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "none",
-  backgroundColor: "#4CAF50",
-  color: "white",
-  cursor: "pointer",
-};
-
-const secondaryBtn: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "none",
-  backgroundColor: "#666",
-  color: "white",
-  cursor: "pointer",
-};
-
-const filterBtn: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  backgroundColor: "white",
-  color: "#333",
-  cursor: "pointer",
-};
-
-const activeFilterBtn: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "1px solid #4CAF50",
-  backgroundColor: "#4CAF50",
-  color: "white",
-  cursor: "pointer",
-};
-
-const smallEditBtn: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: "none",
-  backgroundColor: "#1976d2",
-  color: "white",
-  cursor: "pointer",
-};
-
-const smallDeleteBtn: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: "none",
-  backgroundColor: "#d32f2f",
-  color: "white",
-  cursor: "pointer",
-};
-
-const smallSaveBtn: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: "none",
-  backgroundColor: "#2e7d32",
-  color: "white",
-  cursor: "pointer",
-};
-
-const smallCancelBtn: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: "none",
-  backgroundColor: "#9e9e9e",
-  color: "white",
-  cursor: "pointer",
+  borderRadius: 18,
+  display: "block",
+  boxShadow: "0 12px 30px rgba(96, 145, 171, 0.12)",
 };
 
 const emptyPhoto: React.CSSProperties = {
   width: "100%",
   minHeight: 180,
   borderRadius: 12,
-  border: "1px dashed #ccc",
+  border: "1px dashed #c8dfea",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   color: "#666",
   background: "#fafafa",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: 8,
+  color: "#456579",
+  fontSize: 14,
+  fontWeight: 700,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: 14,
+  borderRadius: 16,
+  border: "1px solid rgba(149, 194, 214, 0.8)",
+  background: "rgba(255,255,255,0.88)",
+  outline: "none",
+  fontSize: 15,
+  color: "#15384b",
+  boxSizing: "border-box",
+};
+
+const mainBlueBtn: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  borderRadius: 18,
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  fontSize: 17,
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(37, 116, 160, 0.24)",
+  cursor: "pointer",
+};
+
+const softPearlBtn: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  borderRadius: 18,
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #f6fbff, #e5f4fb, #d5edf8)",
+  color: "#1b4f69",
+  fontSize: 17,
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(102, 152, 177, 0.14)",
+  cursor: "pointer",
+};
+
+const filterBtn: React.CSSProperties = {
+  border: "1px solid rgba(149, 194, 214, 0.85)",
+  background: "rgba(255,255,255,0.82)",
+  color: "#24516a",
+  borderRadius: 999,
+  padding: "10px 16px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 8px 20px rgba(93, 146, 172, 0.08)",
+};
+
+const activeFilterBtn: React.CSSProperties = {
+  border: "1px solid rgba(53, 132, 178, 0.95)",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  borderRadius: 999,
+  padding: "10px 16px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 10px 24px rgba(37, 116, 160, 0.18)",
+};
+
+const smallBlueBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const smallDeleteBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #f07b7b, #d95353)",
+  color: "white",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const smallSaveBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #59b9e6, #2f8cc4)",
+  color: "white",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const smallCancelBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #f6fbff, #e5f4fb, #d5edf8)",
+  color: "#1b4f69",
+  fontWeight: 700,
+  cursor: "pointer",
 };
