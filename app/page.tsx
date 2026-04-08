@@ -314,76 +314,40 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#f5f5f5",
-          fontFamily: "Arial, sans-serif",
-          padding: 20,
-        }}
-      >
-        <div
-          style={{
-            background: "white",
-            padding: 30,
-            borderRadius: 16,
-            width: 380,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h2 style={{ marginBottom: 20, textAlign: "center" }}>
-            Staff Login
-          </h2>
+      <div style={pageWrap}>
+        <div style={loginCard}>
+          <div style={pearlBadge}>◌</div>
+          <h1 style={titleStyle}>Nagomi Pearl Shift</h1>
+          <p style={subtitleStyle}>Soft flow. Clear time. Beautiful routine.</p>
 
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: "block", marginBottom: 6 }}>Email</label>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-                padding: 10,
-                borderRadius: 8,
-                border: "1px solid #ccc",
-              }}
+              style={inputStyle}
+              placeholder="Enter your email"
             />
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", marginBottom: 6 }}>Password</label>
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: 10,
-                borderRadius: 8,
-                border: "1px solid #ccc",
-              }}
+              style={inputStyle}
+              placeholder="Enter your password"
             />
           </div>
 
           <button
             onClick={handleLogin}
             disabled={loading}
-            style={{
-              width: "100%",
-              padding: 12,
-              marginBottom: 10,
-              borderRadius: 10,
-              border: "none",
-              backgroundColor: "#4CAF50",
-              color: "white",
-              fontSize: 16,
-              cursor: "pointer",
-            }}
+            style={mainBlueBtn}
           >
-            {loading ? "Processing..." : "Log In"}
+            {loading ? "Entering..." : "Log In"}
           </button>
         </div>
       </div>
@@ -391,68 +355,49 @@ export default function Home() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f5f5f5",
-        fontFamily: "Arial, sans-serif",
-        padding: 20,
-      }}
-    >
-      <div
-        style={{
-          background: "white",
-          padding: 30,
-          borderRadius: 16,
-          width: 420,
-          maxHeight: "90vh",
-          overflowY: "auto",
-          textAlign: "center",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div style={{ marginBottom: 16, textAlign: "right" }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 8,
-              border: "none",
-              backgroundColor: "#666",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
+    <div style={pageWrap}>
+      <div style={mobileCard}>
+        <div style={topBar}>
+          <div>
+            <div style={smallLabel}>Staff</div>
+            <div style={staffName}>{profile?.name || user.email}</div>
+          </div>
+          <button onClick={handleLogout} style={logoutBtn}>
             Log Out
           </button>
         </div>
 
-        <h2 style={{ marginBottom: 8 }}>Nagomi Check-in</h2>
+        <div style={heroCard}>
+          <div style={heroGlow} />
+          <div style={pearlBadgeLarge}>◌</div>
+          <h1 style={heroTitle}>Pearl Shift</h1>
+          <p style={heroSubtitle}>
+            {activeShift
+              ? `Checked in at ${new Date(
+                  activeShift.check_in_time || ""
+                ).toLocaleTimeString()}`
+              : "You are not checked in"}
+          </p>
+        </div>
 
-        <p style={{ marginBottom: 8 }}>
-          <strong>Staff:</strong> {profile?.name || user.email}
-        </p>
-
-        <p style={{ marginBottom: 20 }}>
-          <strong>Hourly Rate:</strong> {hourlyRate.toLocaleString()} VND/hour
-        </p>
-
-        <p style={{ marginBottom: 20 }}>
-          {activeShift
-            ? `Checked in at ${new Date(
-                activeShift.check_in_time || ""
-              ).toLocaleTimeString()}`
-            : "You are not checked in"}
-        </p>
+        <div style={statGrid}>
+          <div style={statCard}>
+            <div style={statLabel}>Hourly Rate</div>
+            <div style={statValue}>{hourlyRate.toLocaleString()} VND</div>
+          </div>
+          <div style={statCard}>
+            <div style={statLabel}>Total Hours</div>
+            <div style={statValue}>{totalHours.toFixed(2)} hrs</div>
+          </div>
+          <div style={{ ...statCard, gridColumn: "1 / -1" }}>
+            <div style={statLabel}>Total Salary</div>
+            <div style={statValue}>{totalSalary.toLocaleString()} VND</div>
+          </div>
+        </div>
 
         {!activeShift && (
-          <div style={{ marginBottom: 16, textAlign: "left" }}>
-            <label style={{ display: "block", marginBottom: 8 }}>
-              Upload check-in photo
-            </label>
+          <div style={uploadCard}>
+            <div style={uploadTitle}>Check-in photo</div>
             <input
               type="file"
               accept="image/*"
@@ -461,15 +406,14 @@ export default function Home() {
                   setCheckInPhoto(e.target.files[0]);
                 }
               }}
+              style={fileInputStyle}
             />
           </div>
         )}
 
         {activeShift && (
-          <div style={{ marginBottom: 16, textAlign: "left" }}>
-            <label style={{ display: "block", marginBottom: 8 }}>
-              Upload check-out photo
-            </label>
+          <div style={uploadCard}>
+            <div style={uploadTitle}>Check-out photo</div>
             <input
               type="file"
               accept="image/*"
@@ -478,172 +422,437 @@ export default function Home() {
                   setCheckOutPhoto(e.target.files[0]);
                 }
               }}
+              style={fileInputStyle}
             />
           </div>
         )}
 
-        <button
-          onClick={handleCheckIn}
-          disabled={loading || !!activeShift}
-          style={{
-            width: "100%",
-            padding: 12,
-            marginBottom: 10,
-            borderRadius: 10,
-            border: "none",
-            backgroundColor: activeShift ? "#ccc" : "#4CAF50",
-            color: "white",
-            fontSize: 16,
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "Processing..." : "Check In"}
-        </button>
+        <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
+          <button
+            onClick={handleCheckIn}
+            disabled={loading || !!activeShift}
+            style={{
+              ...mainBlueBtn,
+              opacity: activeShift ? 0.5 : 1,
+            }}
+          >
+            {loading ? "Processing..." : "Check In"}
+          </button>
 
-        <button
-          onClick={handleCheckOut}
-          disabled={loading || !activeShift}
-          style={{
-            width: "100%",
-            padding: 12,
-            borderRadius: 10,
-            border: "none",
-            backgroundColor: !activeShift ? "#ccc" : "#f44336",
-            color: "white",
-            fontSize: 16,
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "Processing..." : "Check Out"}
-        </button>
+          <button
+            onClick={handleCheckOut}
+            disabled={loading || !activeShift}
+            style={{
+              ...softPearlBtn,
+              opacity: !activeShift ? 0.5 : 1,
+            }}
+          >
+            {loading ? "Processing..." : "Check Out"}
+          </button>
+        </div>
 
         {activeShift && activeShift.check_in_image_url && (
-          <div style={{ marginTop: 20 }}>
-            <p>Latest check-in photo:</p>
+          <div style={photoPreviewCard}>
+            <div style={sectionTitle}>Latest Check-in Photo</div>
             <img
               src={activeShift.check_in_image_url}
               alt="check-in"
-              style={{
-                width: "100%",
-                borderRadius: 10,
-                marginTop: 8,
-              }}
+              style={previewImage}
             />
           </div>
         )}
 
-        <div
-          style={{
-            marginTop: 24,
-            padding: 16,
-            backgroundColor: "#fafafa",
-            borderRadius: 12,
-            textAlign: "left",
-            border: "1px solid #eee",
-          }}
-        >
-          <p style={{ margin: "0 0 8px 0" }}>
-            <strong>Total Hours:</strong> {totalHours.toFixed(2)} hrs
-          </p>
-          <p style={{ margin: 0 }}>
-            <strong>Total Salary:</strong> {totalSalary.toLocaleString()} VND
-          </p>
-        </div>
+        <div style={{ marginTop: 26 }}>
+          <div style={sectionTitle}>My Attendance Logs</div>
 
-        <h3 style={{ marginTop: 30, marginBottom: 16 }}>My Attendance Logs</h3>
+          <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
+            {logs.length === 0 ? (
+              <div style={emptyCard}>No attendance records yet.</div>
+            ) : (
+              logs.map((log) => {
+                const checkIn = log.check_in_time
+                  ? new Date(log.check_in_time)
+                  : null;
 
-        <div style={{ textAlign: "left" }}>
-          {logs.length === 0 ? (
-            <p>No attendance records yet.</p>
-          ) : (
-            logs.map((log) => {
-              const checkIn = log.check_in_time
-                ? new Date(log.check_in_time)
-                : null;
+                const checkOut = log.check_out_time
+                  ? new Date(log.check_out_time)
+                  : null;
 
-              const checkOut = log.check_out_time
-                ? new Date(log.check_out_time)
-                : null;
+                let hours: number | null = null;
+                let salary: number | null = null;
 
-              let hours: number | null = null;
-              let salary: number | null = null;
+                if (checkIn && checkOut) {
+                  const diff =
+                    (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
+                  hours = diff;
+                  salary = diff * hourlyRate;
+                }
 
-              if (checkIn && checkOut) {
-                const diff =
-                  (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
-                hours = diff;
-                salary = diff * hourlyRate;
-              }
-
-              return (
-                <div
-                  key={log.id}
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 12,
-                    padding: 12,
-                    marginBottom: 12,
-                  }}
-                >
-                  <p style={{ margin: "0 0 6px 0" }}>
-                    <strong>Check In:</strong>{" "}
-                    {checkIn ? checkIn.toLocaleString() : "-"}
-                  </p>
-
-                  <p style={{ margin: "0 0 6px 0" }}>
-                    <strong>Check Out:</strong>{" "}
-                    {checkOut ? checkOut.toLocaleString() : "Still working"}
-                  </p>
-
-                  <p style={{ margin: "0 0 6px 0" }}>
-                    <strong>Hours:</strong>{" "}
-                    {hours !== null ? `${hours.toFixed(2)} hrs` : "In progress"}
-                  </p>
-
-                  <p style={{ margin: "0 0 6px 0" }}>
-                    <strong>Salary:</strong>{" "}
-                    {salary !== null ? `${salary.toLocaleString()} VND` : "-"}
-                  </p>
-
-                  {log.check_in_image_url && (
-                    <div style={{ marginTop: 10 }}>
-                      <p style={{ marginBottom: 6 }}>
-                        <strong>Check-in photo:</strong>
-                      </p>
-                      <img
-                        src={log.check_in_image_url}
-                        alt="check-in"
-                        style={{
-                          width: "100%",
-                          borderRadius: 10,
-                          marginTop: 4,
-                        }}
-                      />
+                return (
+                  <div key={log.id} style={logCard}>
+                    <div style={logRow}>
+                      <span style={logLabel}>Check In</span>
+                      <span style={logValue}>
+                        {checkIn ? checkIn.toLocaleString() : "-"}
+                      </span>
                     </div>
-                  )}
 
-                  {log.check_out_image_url && (
-                    <div style={{ marginTop: 10 }}>
-                      <p style={{ marginBottom: 6 }}>
-                        <strong>Check-out photo:</strong>
-                      </p>
-                      <img
-                        src={log.check_out_image_url}
-                        alt="check-out"
-                        style={{
-                          width: "100%",
-                          borderRadius: 10,
-                          marginTop: 4,
-                        }}
-                      />
+                    <div style={logRow}>
+                      <span style={logLabel}>Check Out</span>
+                      <span style={logValue}>
+                        {checkOut ? checkOut.toLocaleString() : "Still working"}
+                      </span>
                     </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+
+                    <div style={logRow}>
+                      <span style={logLabel}>Hours</span>
+                      <span style={logValue}>
+                        {hours !== null ? `${hours.toFixed(2)} hrs` : "In progress"}
+                      </span>
+                    </div>
+
+                    <div style={logRow}>
+                      <span style={logLabel}>Salary</span>
+                      <span style={logValue}>
+                        {salary !== null ? `${salary.toLocaleString()} VND` : "-"}
+                      </span>
+                    </div>
+
+                    {log.check_in_image_url && (
+                      <div style={{ marginTop: 14 }}>
+                        <div style={imageLabel}>Check-in photo</div>
+                        <img
+                          src={log.check_in_image_url}
+                          alt="check-in"
+                          style={previewImage}
+                        />
+                      </div>
+                    )}
+
+                    {log.check_out_image_url && (
+                      <div style={{ marginTop: 14 }}>
+                        <div style={imageLabel}>Check-out photo</div>
+                        <img
+                          src={log.check_out_image_url}
+                          alt="check-out"
+                          style={previewImage}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+const pageWrap: React.CSSProperties = {
+  minHeight: "100vh",
+  padding: 18,
+  background:
+    "linear-gradient(180deg, #dff4ff 0%, #cdefff 24%, #b7e4fa 55%, #eef8ff 100%)",
+  fontFamily:
+    "'Georgia', 'Times New Roman', serif",
+  display: "flex",
+  justifyContent: "center",
+};
+
+const mobileCard: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 460,
+  padding: 18,
+};
+
+const loginCard: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 420,
+  marginTop: 40,
+  background: "rgba(255,255,255,0.68)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  border: "1px solid rgba(255,255,255,0.6)",
+  boxShadow: "0 20px 60px rgba(67, 143, 184, 0.18)",
+  borderRadius: 28,
+  padding: 28,
+};
+
+const topBar: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 18,
+  gap: 12,
+};
+
+const smallLabel: React.CSSProperties = {
+  fontSize: 12,
+  color: "#5d7c8d",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+};
+
+const staffName: React.CSSProperties = {
+  fontSize: 20,
+  color: "#15384b",
+  fontWeight: 700,
+};
+
+const logoutBtn: React.CSSProperties = {
+  border: "none",
+  background: "rgba(255,255,255,0.65)",
+  color: "#22506a",
+  borderRadius: 999,
+  padding: "10px 14px",
+  fontSize: 14,
+  boxShadow: "0 8px 20px rgba(84, 140, 170, 0.14)",
+  cursor: "pointer",
+};
+
+const heroCard: React.CSSProperties = {
+  position: "relative",
+  overflow: "hidden",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(222,245,255,0.9), rgba(181,227,248,0.95))",
+  borderRadius: 28,
+  padding: "28px 22px",
+  boxShadow: "0 18px 40px rgba(61, 128, 164, 0.18)",
+  border: "1px solid rgba(255,255,255,0.65)",
+  textAlign: "center",
+};
+
+const heroGlow: React.CSSProperties = {
+  position: "absolute",
+  width: 180,
+  height: 180,
+  right: -50,
+  top: -60,
+  borderRadius: "50%",
+  background: "rgba(255,255,255,0.55)",
+  filter: "blur(10px)",
+};
+
+const pearlBadge: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: "50%",
+  background: "linear-gradient(135deg, #fefefe, #e8f7ff, #d8edf8)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#79a7bc",
+  fontSize: 24,
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.16)",
+  marginBottom: 18,
+};
+
+const pearlBadgeLarge: React.CSSProperties = {
+  width: 68,
+  height: 68,
+  borderRadius: "50%",
+  margin: "0 auto 14px auto",
+  background: "linear-gradient(135deg, #ffffff, #e8f7ff, #cfe8f6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#7ca8bc",
+  fontSize: 34,
+  boxShadow: "0 14px 32px rgba(85, 145, 177, 0.18)",
+};
+
+const titleStyle: React.CSSProperties = {
+  margin: "0 0 8px 0",
+  fontSize: 34,
+  color: "#15384b",
+  textAlign: "center",
+  fontWeight: 700,
+};
+
+const subtitleStyle: React.CSSProperties = {
+  margin: "0 0 24px 0",
+  color: "#5f7d8e",
+  textAlign: "center",
+  fontSize: 15,
+  lineHeight: 1.5,
+};
+
+const heroTitle: React.CSSProperties = {
+  margin: 0,
+  fontSize: 32,
+  color: "#14384b",
+  fontWeight: 700,
+};
+
+const heroSubtitle: React.CSSProperties = {
+  margin: "10px 0 0 0",
+  color: "#557589",
+  fontSize: 16,
+  lineHeight: 1.5,
+};
+
+const statGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 12,
+  marginTop: 16,
+};
+
+const statCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 20,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const statLabel: React.CSSProperties = {
+  fontSize: 13,
+  color: "#67859a",
+  marginBottom: 6,
+};
+
+const statValue: React.CSSProperties = {
+  fontSize: 20,
+  color: "#173b4d",
+  fontWeight: 700,
+  lineHeight: 1.3,
+};
+
+const uploadCard: React.CSSProperties = {
+  marginTop: 18,
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 20,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const uploadTitle: React.CSSProperties = {
+  marginBottom: 10,
+  color: "#1f4860",
+  fontWeight: 700,
+  fontSize: 15,
+};
+
+const fileInputStyle: React.CSSProperties = {
+  width: "100%",
+  fontSize: 14,
+  color: "#35566b",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: 8,
+  color: "#456579",
+  fontSize: 14,
+  fontWeight: 700,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: 14,
+  borderRadius: 16,
+  border: "1px solid rgba(149, 194, 214, 0.8)",
+  background: "rgba(255,255,255,0.88)",
+  outline: "none",
+  fontSize: 15,
+  color: "#15384b",
+  boxSizing: "border-box",
+};
+
+const mainBlueBtn: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  borderRadius: 18,
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  fontSize: 17,
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(37, 116, 160, 0.24)",
+  cursor: "pointer",
+};
+
+const softPearlBtn: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  borderRadius: 18,
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #f6fbff, #e5f4fb, #d5edf8)",
+  color: "#1b4f69",
+  fontSize: 17,
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(102, 152, 177, 0.14)",
+  cursor: "pointer",
+};
+
+const photoPreviewCard: React.CSSProperties = {
+  marginTop: 20,
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 22,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: 20,
+  color: "#173b4d",
+  fontWeight: 700,
+  marginBottom: 10,
+};
+
+const previewImage: React.CSSProperties = {
+  width: "100%",
+  borderRadius: 18,
+  marginTop: 6,
+  display: "block",
+  boxShadow: "0 12px 30px rgba(96, 145, 171, 0.12)",
+};
+
+const emptyCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 18,
+  padding: 18,
+  color: "#5e7d90",
+  border: "1px solid rgba(255,255,255,0.65)",
+};
+
+const logCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.78)",
+  borderRadius: 22,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.7)",
+  boxShadow: "0 12px 28px rgba(87, 145, 175, 0.10)",
+};
+
+const logRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "8px 0",
+  borderBottom: "1px solid rgba(204, 228, 240, 0.7)",
+};
+
+const logLabel: React.CSSProperties = {
+  color: "#557389",
+  fontWeight: 700,
+  fontSize: 14,
+};
+
+const logValue: React.CSSProperties = {
+  color: "#183b4d",
+  fontSize: 14,
+  textAlign: "right",
+  maxWidth: "58%",
+};
+
+const imageLabel: React.CSSProperties = {
+  color: "#557389",
+  fontWeight: 700,
+  marginBottom: 6,
+  fontSize: 14,
+};
