@@ -270,6 +270,45 @@ export default function AdminPage() {
     );
   }, [filteredLogs]);
 
+  const exportSalaryCSV = () => {
+    if (summaryByStaff.length === 0) {
+      alert("No payroll data to export.");
+      return;
+    }
+
+    const rows = [
+      ["Staff Name", "Hourly Rate (VND)", "Total Hours", "Total Salary (VND)"],
+      ...summaryByStaff.map((item) => [
+        item.name,
+        item.hourlyRate.toString(),
+        item.totalHours.toFixed(2),
+        Math.round(item.totalSalary).toString(),
+      ]),
+    ];
+
+    const csvContent = rows
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const now = new Date();
+    const dateLabel = now.toISOString().slice(0, 10);
+    const fileName = `payroll-${filter}-${dateLabel}.csv`;
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div style={pageWrap}>
@@ -366,6 +405,9 @@ export default function AdminPage() {
             onClick={() => setFilter("month")}
           >
             This Month
+          </button>
+          <button style={mainBlueBtnSmall} onClick={exportSalaryCSV}>
+            Export CSV
           </button>
         </div>
 
@@ -968,6 +1010,18 @@ const mainBlueBtn: React.CSSProperties = {
   fontSize: 17,
   fontWeight: 700,
   boxShadow: "0 14px 30px rgba(37, 116, 160, 0.24)",
+  cursor: "pointer",
+};
+
+const mainBlueBtnSmall: React.CSSProperties = {
+  border: "none",
+  borderRadius: 999,
+  padding: "10px 16px",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  fontSize: 14,
+  fontWeight: 700,
+  boxShadow: "0 10px 24px rgba(37, 116, 160, 0.18)",
   cursor: "pointer",
 };
 
