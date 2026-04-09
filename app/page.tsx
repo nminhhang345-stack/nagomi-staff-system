@@ -125,46 +125,61 @@ export default function Home() {
   };
 
   const handleLogin = async () => {
-setLoading(true);
+    setLoading(true);
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  setLoading(false);
+    setLoading(false);
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-  const user = data.user;
+    const loggedInUser = data.user;
 
-  if (!user) {
-    alert("Login failed.");
-    return;
-  }
+    if (!loggedInUser) {
+      alert("Login failed.");
+      return;
+    }
 
-  // 🔥 fetch role after login
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", loggedInUser.id)
+      .single();
 
-  if (profileError || !profile) {
-    alert("Cannot load profile.");
-    return;
-  }
+    if (profileError || !profileData) {
+      alert("Cannot load profile.");
+      return;
+    }
 
-  // 🚀 redirect based on role
-  if (profile.role === "admin") {
-    window.location.href = "/admin";
-  } else {
-    window.location.href = "/";
-  }
-};
+    if (profileData.role === "admin") {
+      window.location.href = "/admin";
+    } else {
+      window.location.href = "/";
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      alert("Please enter your email first.");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://nagomi-staff-system.vercel.app/reset-password",
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Check your email to reset password.");
+    }
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -214,15 +229,13 @@ setLoading(true);
 
     const imageUrl = publicUrlData.publicUrl;
 
-    const { error } = await supabase
-      .from("attendance_logs")
-      .insert([
-        {
-          user_id: user.id,
-          check_in_time: new Date().toISOString(),
-          check_in_image_url: imageUrl,
-        },
-      ]);
+    const { error } = await supabase.from("attendance_logs").insert([
+      {
+        user_id: user.id,
+        check_in_time: new Date().toISOString(),
+        check_in_image_url: imageUrl,
+      },
+    ]);
 
     setLoading(false);
 
@@ -413,6 +426,10 @@ setLoading(true);
           >
             {loading ? "Entering..." : "Log In"}
           </button>
+
+          <button onClick={handleForgotPassword} style={forgotBtn}>
+            Forgot password?
+          </button>
         </div>
       </div>
     );
@@ -569,9 +586,7 @@ setLoading(true);
           <div style={summaryExplain}>
             Your salary is calculated from each completed shift:
           </div>
-          <div style={formulaBox}>
-            Salary = Hours worked × Hourly rate
-          </div>
+          <div style={formulaBox}>Salary = Hours worked × Hourly rate</div>
           <div style={summaryExplain}>
             For the current filter, your total is:
           </div>
@@ -911,6 +926,17 @@ const mainBlueBtn: React.CSSProperties = {
   fontSize: 17,
   fontWeight: 700,
   boxShadow: "0 14px 30px rgba(37, 116, 160, 0.24)",
+  cursor: "pointer",
+};
+
+const forgotBtn: React.CSSProperties = {
+  marginTop: 12,
+  width: "100%",
+  border: "none",
+  background: "transparent",
+  color: "#2f8cc4",
+  fontSize: 14,
+  textDecoration: "underline",
   cursor: "pointer",
 };
 
