@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 type AttendanceRow = {
@@ -20,6 +20,8 @@ type Profile = {
   role: string;
 };
 
+type FilterType = "all" | "today" | "week" | "month";
+
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -31,6 +33,7 @@ export default function Home() {
   const [checkInPhoto, setCheckInPhoto] = useState<File | null>(null);
   const [checkOutPhoto, setCheckOutPhoto] = useState<File | null>(null);
   const [logs, setLogs] = useState<AttendanceRow[]>([]);
+  const [filter, setFilter] = useState<FilterType>("all");
 
   useEffect(() => {
     const loadSession = async () => {
@@ -286,31 +289,67 @@ export default function Home() {
 
   const hourlyRate = profile?.hourly_rate ?? 25000;
 
-  const totalSalary = logs.reduce((sum, log) => {
-    const checkIn = log.check_in_time ? new Date(log.check_in_time) : null;
-    const checkOut = log.check_out_time ? new Date(log.check_out_time) : null;
+  const filteredLogs = useMemo(() => {
+    const now = new Date();
 
-    if (checkIn && checkOut) {
-      const hours =
-        (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
-      return sum + hours * hourlyRate;
-    }
+    return logs.filter((log) => {
+      if (!log.check_in_time) return false;
 
-    return sum;
-  }, 0);
+      const checkInDate = new Date(log.check_in_time);
 
-  const totalHours = logs.reduce((sum, log) => {
-    const checkIn = log.check_in_time ? new Date(log.check_in_time) : null;
-    const checkOut = log.check_out_time ? new Date(log.check_out_time) : null;
+      if (filter === "all") return true;
 
-    if (checkIn && checkOut) {
-      const hours =
-        (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
-      return sum + hours;
-    }
+      if (filter === "today") {
+        return (
+          checkInDate.getFullYear() === now.getFullYear() &&
+          checkInDate.getMonth() === now.getMonth() &&
+          checkInDate.getDate() === now.getDate()
+        );
+      }
 
-    return sum;
-  }, 0);
+      if (filter === "week") {
+        const startOfWeek = new Date(now);
+        const day = startOfWeek.getDay();
+        const diff = day === 0 ? 6 : day - 1;
+        startOfWeek.setDate(startOfWeek.getDate() - diff);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        return checkInDate >= startOfWeek;
+      }
+
+      if (filter === "month") {
+        return (
+          checkInDate.getFullYear() === now.getFullYear() &&
+          checkInDate.getMonth() === now.getMonth()
+        );
+      }
+
+      return true;
+    });
+  }, [logs, filter]);
+
+  const totalStats = useMemo(() => {
+    let totalHours = 0;
+    let totalSalary = 0;
+
+    filteredLogs.forEach((log) => {
+      if (log.check_in_time && log.check_out_time) {
+        const checkIn = new Date(log.check_in_time);
+        const checkOut = new Date(log.check_out_time);
+
+        const hours =
+          (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
+
+        totalHours += hours;
+        totalSalary += hours * hourlyRate;
+      }
+    });
+
+    return {
+      totalHours,
+      totalSalary,
+    };
+  }, [filteredLogs, hourlyRate]);
 
   if (!user) {
     return (
@@ -386,13 +425,51 @@ export default function Home() {
             <div style={statValue}>{hourlyRate.toLocaleString()} VND</div>
           </div>
           <div style={statCard}>
-            <div style={statLabel}>Total Hours</div>
-            <div style={statValue}>{totalHours.toFixed(2)} hrs</div>
+            <div style={statLabel}>Current Filter</div>
+            <div style={statValueSmall}>
+              {filter === "all"
+                ? "All Time"
+                : filter === "today"
+                ? "Today"
+                : filter === "week"
+                ? "This Week"
+                : "This Month"}
+            </div>
           </div>
           <div style={{ ...statCard, gridColumn: "1 / -1" }}>
-            <div style={statLabel}>Total Salary</div>
-            <div style={statValue}>{totalSalary.toLocaleString()} VND</div>
+            <div style={statLabel}>Salary Transparency</div>
+            <div style={statValue}>{totalStats.totalSalary.toLocaleString()} VND</div>
+            <div style={statSubText}>
+              {totalStats.totalHours.toFixed(2)} hrs × {hourlyRate.toLocaleString()} VND/hour
+            </div>
           </div>
+        </div>
+
+        <div style={filterWrap}>
+          <button
+            style={filter === "all" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("all")}
+          >
+            All Time
+          </button>
+          <button
+            style={filter === "today" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("today")}
+          >
+            Today
+          </button>
+          <button
+            style={filter === "week" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("week")}
+          >
+            This Week
+          </button>
+          <button
+            style={filter === "month" ? activeFilterBtn : filterBtn}
+            onClick={() => setFilter("month")}
+          >
+            This Month
+          </button>
         </div>
 
         {!activeShift && (
@@ -462,14 +539,31 @@ export default function Home() {
           </div>
         )}
 
+        <div style={summaryCard}>
+          <div style={sectionTitle}>Why You’re Paid This Much</div>
+          <div style={summaryExplain}>
+            Your salary is calculated from each completed shift:
+          </div>
+          <div style={formulaBox}>
+            Salary = Hours worked × Hourly rate
+          </div>
+          <div style={summaryExplain}>
+            For the current filter, your total is:
+          </div>
+          <div style={summaryTotal}>
+            {totalStats.totalHours.toFixed(2)} hrs × {hourlyRate.toLocaleString()} VND
+            = {` ${totalStats.totalSalary.toLocaleString()} VND`}
+          </div>
+        </div>
+
         <div style={{ marginTop: 26 }}>
           <div style={sectionTitle}>My Attendance Logs</div>
 
           <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
-            {logs.length === 0 ? (
-              <div style={emptyCard}>No attendance records yet.</div>
+            {filteredLogs.length === 0 ? (
+              <div style={emptyCard}>No attendance records for this filter.</div>
             ) : (
-              logs.map((log) => {
+              filteredLogs.map((log) => {
                 const checkIn = log.check_in_time
                   ? new Date(log.check_in_time)
                   : null;
@@ -555,8 +649,7 @@ const pageWrap: React.CSSProperties = {
   padding: 18,
   background:
     "linear-gradient(180deg, #dff4ff 0%, #cdefff 24%, #b7e4fa 55%, #eef8ff 100%)",
-  fontFamily:
-    "'Georgia', 'Times New Roman', serif",
+  fontFamily: "'Georgia', 'Times New Roman', serif",
   display: "flex",
   justifyContent: "center",
 };
@@ -721,6 +814,26 @@ const statValue: React.CSSProperties = {
   lineHeight: 1.3,
 };
 
+const statValueSmall: React.CSSProperties = {
+  fontSize: 18,
+  color: "#173b4d",
+  fontWeight: 700,
+  lineHeight: 1.3,
+};
+
+const statSubText: React.CSSProperties = {
+  fontSize: 13,
+  color: "#648197",
+  marginTop: 6,
+};
+
+const filterWrap: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  marginTop: 16,
+};
+
 const uploadCard: React.CSSProperties = {
   marginTop: 18,
   background: "rgba(255,255,255,0.72)",
@@ -789,7 +902,40 @@ const softPearlBtn: React.CSSProperties = {
   cursor: "pointer",
 };
 
+const filterBtn: React.CSSProperties = {
+  border: "1px solid rgba(149, 194, 214, 0.85)",
+  background: "rgba(255,255,255,0.82)",
+  color: "#24516a",
+  borderRadius: 999,
+  padding: "10px 14px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 8px 20px rgba(93, 146, 172, 0.08)",
+};
+
+const activeFilterBtn: React.CSSProperties = {
+  border: "1px solid rgba(53, 132, 178, 0.95)",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  borderRadius: 999,
+  padding: "10px 14px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 10px 24px rgba(37, 116, 160, 0.18)",
+};
+
 const photoPreviewCard: React.CSSProperties = {
+  marginTop: 20,
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 22,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const summaryCard: React.CSSProperties = {
   marginTop: 20,
   background: "rgba(255,255,255,0.72)",
   borderRadius: 22,
@@ -803,6 +949,29 @@ const sectionTitle: React.CSSProperties = {
   color: "#173b4d",
   fontWeight: 700,
   marginBottom: 10,
+};
+
+const summaryExplain: React.CSSProperties = {
+  fontSize: 14,
+  color: "#5b778d",
+  marginBottom: 8,
+  lineHeight: 1.5,
+};
+
+const formulaBox: React.CSSProperties = {
+  background: "rgba(244,251,255,0.95)",
+  borderRadius: 16,
+  padding: 14,
+  color: "#18445a",
+  fontWeight: 700,
+  marginBottom: 10,
+};
+
+const summaryTotal: React.CSSProperties = {
+  color: "#173b4d",
+  fontWeight: 700,
+  fontSize: 16,
+  lineHeight: 1.6,
 };
 
 const previewImage: React.CSSProperties = {
