@@ -125,21 +125,46 @@ export default function Home() {
   };
 
   const handleLogin = async () => {
-    setLoading(true);
+setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    setLoading(false);
+  setLoading(false);
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Logged in successfully!");
-    }
-  };
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const user = data.user;
+
+  if (!user) {
+    alert("Login failed.");
+    return;
+  }
+
+  // 🔥 fetch role after login
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    alert("Cannot load profile.");
+    return;
+  }
+
+  // 🚀 redirect based on role
+  if (profile.role === "admin") {
+    window.location.href = "/admin";
+  } else {
+    window.location.href = "/";
+  }
+};
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
