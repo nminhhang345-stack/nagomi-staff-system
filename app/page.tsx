@@ -256,7 +256,8 @@ export default function Home() {
       setStatus("");
       alert(error.message);
     } else {
-      alert("Checked in successfully!");
+      setStatus("Checked in successfully.");
+      setTimeout(() => setStatus(""), 1500);
       resetCapturedPhoto();
       setCameraMode(null);
       await loadActiveShift(user.id);
@@ -339,7 +340,8 @@ export default function Home() {
       setStatus("");
       alert(updateError.message);
     } else {
-      alert("Checked out successfully!");
+      setStatus("Checked out successfully.");
+      setTimeout(() => setStatus(""), 1500);
       resetCapturedPhoto();
       setCameraMode(null);
       setActiveShift(null);
@@ -410,67 +412,7 @@ export default function Home() {
       totalSalary,
     };
   }, [filteredLogs, hourlyRate]);
-const compressImage = (file: File): Promise<File> => {
-  return new Promise((resolve) => {
-    if (file.size < 300 * 1024) {
-      resolve(file);
-      return;
-    }
 
-    const img = new Image();
-    const reader = new FileReader();
-
-    reader.readAsDataURL(file);
-
-    reader.onload = (event) => {
-      if (!event.target?.result) {
-        resolve(file);
-        return;
-      }
-
-      img.src = event.target.result as string;
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-
-        const MAX_WIDTH = 360;
-        const scaleSize = Math.min(1, MAX_WIDTH / img.width);
-
-        canvas.width = img.width * scaleSize;
-        canvas.height = img.height * scaleSize;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(file);
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              resolve(file);
-              return;
-            }
-
-            const compressedFile = new File([blob], file.name, {
-              type: "image/jpeg",
-            });
-
-            resolve(compressedFile);
-          },
-          "image/jpeg",
-          0.4
-        );
-      };
-
-      img.onerror = () => resolve(file);
-    };
-
-    reader.onerror = () => resolve(file);
-  });
-};
 const startCamera = async (mode: "checkin" | "checkout") => {
   try {
     setStatus("Opening camera...");
@@ -481,8 +423,8 @@ const startCamera = async (mode: "checkin" | "checkout") => {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
-        width: { ideal: 640 },
-        height: { ideal: 480 },
+        width: { ideal: 480 },
+        height: { ideal: 360 },
       },
       audio: false,
     });
@@ -521,8 +463,8 @@ const capturePhoto = async () => {
   const video = videoRef.current;
   const canvas = document.createElement("canvas");
 
-  canvas.width = 640;
-  canvas.height = 480;
+  canvas.width = 480;
+  canvas.height = 360;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -546,7 +488,7 @@ const capturePhoto = async () => {
       setStatus("Photo captured.");
     },
     "image/jpeg",
-    0.5
+    0.35
   );
 };
 
