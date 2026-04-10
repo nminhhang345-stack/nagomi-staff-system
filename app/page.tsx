@@ -208,14 +208,14 @@ export default function Home() {
     }
 
     setLoading(true);
-
+    const compressed = await compressImage(checkInPhoto)
     const fileExt = checkInPhoto.name.split(".").pop();
     const fileName = `${user.id}-checkin-${Date.now()}.${fileExt}`;
     const filePath = fileName;
 
     const { error: uploadError } = await supabase.storage
       .from("attendance-photos")
-      .upload(filePath, checkInPhoto);
+      .upload(filePath, compressed);
 
     if (uploadError) {
       setLoading(false);
@@ -261,6 +261,7 @@ export default function Home() {
     }
 
     setLoading(true);
+    const compressed = await compressImage(checkOutPhoto);
 
     const { data, error } = await supabase
       .from("attendance_logs")
@@ -290,7 +291,7 @@ export default function Home() {
 
     const { error: uploadError } = await supabase.storage
       .from("attendance-photos")
-      .upload(filePath, checkOutPhoto);
+      .upload(filePath, compressed);
 
     if (uploadError) {
       setLoading(false);
@@ -388,7 +389,49 @@ export default function Home() {
       totalSalary,
     };
   }, [filteredLogs, hourlyRate]);
+const compressImage = (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
 
+    reader.readAsDataURL(file);
+
+    reader.onload = (event) => {
+      if (!event.target?.result) return;
+
+      img.src = event.target.result as string;
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+
+        const MAX_WIDTH = 800;
+        const scaleSize = MAX_WIDTH / img.width;
+
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return;
+
+            const compressedFile = new File([blob], file.name, {
+              type: "image/jpeg",
+            });
+
+            resolve(compressedFile);
+          },
+          "image/jpeg",
+          0.7
+        );
+      };
+    };
+  });
+};
   if (!user) {
     return (
       <div style={pageWrap}>
