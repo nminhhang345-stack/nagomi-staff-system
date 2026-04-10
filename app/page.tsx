@@ -520,6 +520,7 @@ export default function Home() {
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
                   setCheckInPhoto(e.target.files[0]);
@@ -536,6 +537,7 @@ export default function Home() {
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
                   setCheckOutPhoto(e.target.files[0]);
