@@ -480,7 +480,7 @@ const startCamera = async (mode: "checkin" | "checkout") => {
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
-        facingMode: { ideal: "environment" },
+        facingMode: "user",
         width: { ideal: 640 },
         height: { ideal: 480 },
       },
