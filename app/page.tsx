@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 type AttendanceRow = {
   id: number;
@@ -29,11 +29,19 @@ export default function Home() {
 
   const [activeShift, setActiveShift] = useState<AttendanceRow | null>(null);
   const [loading, setLoading] = useState(false);
+
   const [status, setStatus] = useState("");
+  const [cameraMode, setCameraMode] = useState<"checkin" | "checkout" | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const [checkInPhoto, setCheckInPhoto] = useState<File | null>(null);
   const [checkOutPhoto, setCheckOutPhoto] = useState<File | null>(null);
   const [logs, setLogs] = useState<AttendanceRow[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream |null>(null);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -202,7 +210,7 @@ export default function Home() {
       return;
     }
 
-    if (!checkInPhoto) {
+    if (!capturedBlob || cameraMode !== "checkin") {
       alert("Please choose a check-in photo first.");
       setStatus("");
       return;
@@ -211,14 +219,14 @@ export default function Home() {
     setLoading(true);
     setStatus("Processing photo...");
 
-    const compressed = await compressImage(checkInPhoto)
-    const fileExt = checkInPhoto.name.split(".").pop();
-    const fileName = `${user.id}-checkin-${Date.now()}.${fileExt}`;
+    const fileName = `${user.id}-checkin-${Date.now()}.jpg`;
     const filePath = fileName;
     setStatus("Uploading");
     const { error: uploadError } = await supabase.storage
       .from("attendance-photos")
-      .upload(filePath, compressed);
+      .upload(filePath, capturedBlob, {
+        contentType: "image/jpeg",
+      });
 
     if (uploadError) {
       setLoading(false);
@@ -249,7 +257,8 @@ export default function Home() {
       alert(error.message);
     } else {
       alert("Checked in successfully!");
-      setCheckInPhoto(null);
+      resetCapturedPhoto();
+      setCameraMode(null);
       await loadActiveShift(user.id);
     }
   };
@@ -260,7 +269,7 @@ export default function Home() {
       return;
     }
 
-    if (!checkOutPhoto) {
+    if (!capturedBlob || cameraMode !== "checkout") {
       alert("Please choose a check-out photo first.");
       setStatus("");
       return;
@@ -268,8 +277,7 @@ export default function Home() {
 
     setLoading(true);
     setStatus("Processing photo...");
-    const compressed = await compressImage(checkOutPhoto);
-
+   
     const { data, error } = await supabase
       .from("attendance_logs")
       .select("*")
@@ -280,6 +288,7 @@ export default function Home() {
 
     if (error) {
       setLoading(false);
+      setStatus("");
       alert(error.message);
       return;
     }
@@ -293,13 +302,14 @@ export default function Home() {
 
     const latest = data[0];
 
-    const fileExt = checkOutPhoto.name.split(".").pop();
-    const fileName = `${user.id}-checkout-${Date.now()}.${fileExt}`;
+    const fileName = `${user.id}-checkout-${Date.now()}.jpg`;
     const filePath = fileName;
     setStatus("Uploading...");
     const { error: uploadError } = await supabase.storage
       .from("attendance-photos")
-      .upload(filePath, compressed);
+      .upload(filePath, capturedBlob, {
+        contentType: "image/jpeg",
+      });
 
     if (uploadError) {
       setLoading(false);
@@ -313,7 +323,7 @@ export default function Home() {
       .getPublicUrl(filePath);
 
     const imageUrl = publicUrlData.publicUrl;
-    setStatus("Saving attendance...")
+    setStatus("Saving attendance...");
     const { error: updateError } = await supabase
       .from("attendance_logs")
       .update({
@@ -330,7 +340,8 @@ export default function Home() {
       alert(updateError.message);
     } else {
       alert("Checked out successfully!");
-      setCheckOutPhoto(null);
+      resetCapturedPhoto();
+      setCameraMode(null);
       setActiveShift(null);
       await loadActiveShift(user.id);
     }
@@ -460,13 +471,102 @@ const compressImage = (file: File): Promise<File> => {
     reader.onerror = () => resolve(file);
   });
 };
+const startCamera = async (mode: "checkin" | "checkout") => {
+  try {
+    setStatus("Opening camera...");
+    setCapturedBlob(null);
+    setPreviewUrl(null);
+    setCameraMode(mode);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+      },
+      audio: false,
+    });
+
+    streamRef.current = stream;
+
+    setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+    }, 100);
+
+    setStatus("");
+  } catch (error) {
+    console.error(error);
+    setStatus("");
+    alert("Cannot open camera. Please allow camera access.");
+    setCameraMode(null);
+  }
+};
+
+const stopCamera = () => {
+  if (streamRef.current) {
+    streamRef.current.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
+  if (videoRef.current) {
+    videoRef.current.srcObject = null;
+  }
+};
+
+const capturePhoto = async () => {
+  if (!videoRef.current) return;
+
+  const video = videoRef.current;
+  const canvas = document.createElement("canvas");
+
+  canvas.width = 640;
+  canvas.height = 480;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob(
+    (blob) => {
+      if (!blob) return;
+
+      setCapturedBlob(blob);
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+
+      stopCamera();
+      setStatus("Photo captured.");
+    },
+    "image/jpeg",
+    0.5
+  );
+};
+
+const resetCapturedPhoto = () => {
+  setCapturedBlob(null);
+
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+  }
+
+  setPreviewUrl(null);
+  setStatus("");
+};
   if (!user) {
     return (
       <div style={pageWrap}>
         <div style={loginCard}>
           <div style={pearlBadge}>◌</div>
           <h1 style={titleStyle}>Nagomi Pearl Shift</h1>
-          <p style={subtitleStyle}>Soft flow. Clear time. Beautiful routine.</p>
+          <p style={subtitleStyle}>Have a good working day at Nagomiya!.</p>
 
           <div style={{ marginBottom: 14 }}>
             <label style={labelStyle}>Email</label>
@@ -588,34 +688,22 @@ const compressImage = (file: File): Promise<File> => {
         {!activeShift && (
           <div style={uploadCard}>
             <div style={uploadTitle}>Check-in photo</div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setCheckInPhoto(e.target.files[0]);
-                }
-              }}
-              style={fileInputStyle}
-            />
+            {!cameraMode && (
+              <button style={mainBlueBtn} onClick={() => startCamera("checkin")}>
+                Open Camera
+              </button>
+            )}
           </div>
         )}
 
         {activeShift && (
           <div style={uploadCard}>
             <div style={uploadTitle}>Check-out photo</div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setCheckOutPhoto(e.target.files[0]);
-                }
-              }}
-              style={fileInputStyle}
-            />
+            {!cameraMode && (
+              <button style={mainBlueBtn} onClick={() => startCamera("checkout")}>
+                Open Camera 
+              </button>
+            )}
           </div>
         )}
   {status && (
@@ -632,6 +720,75 @@ const compressImage = (file: File): Promise<File> => {
     }}
   >
     {status}
+  </div>
+)}
+{status && (
+  <div
+    style={{
+      marginTop: 14,
+      padding: 12,
+      borderRadius: 14,
+      background: "rgba(255,255,255,0.72)",
+      color: "#1f4860",
+      fontSize: 14,
+      fontWeight: 600,
+      textAlign: "center",
+    }}
+  >
+    {status}
+  </div>
+)}
+{cameraMode && (
+  <div style={photoPreviewCard}>
+    <div style={sectionTitle}>
+      {cameraMode === "checkin" ? "Check-in Camera" : "Check-out Camera"}
+    </div>
+
+    {!previewUrl ? (
+      <>
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            width: "100%",
+            borderRadius: 18,
+            background: "#000",
+          }}
+        />
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          <button style={mainBlueBtn} onClick={capturePhoto}>
+            Take Photo
+          </button>
+          <button
+            style={softPearlBtn}
+            onClick={() => {
+              stopCamera();
+              setCameraMode(null);
+              setStatus("");
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </>
+    ) : (
+      <>
+        <img src={previewUrl} alt="preview" style={previewImage} />
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          <button
+            style={mainBlueBtn}
+            onClick={() => {
+              resetCapturedPhoto();
+              startCamera(cameraMode);
+            }}
+          >
+            Retake Photo
+          </button>
+        </div>
+      </>
+    )}
   </div>
 )}
         <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
