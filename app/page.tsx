@@ -29,6 +29,7 @@ export default function Home() {
 
   const [activeShift, setActiveShift] = useState<AttendanceRow | null>(null);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
   const [checkInPhoto, setCheckInPhoto] = useState<File | null>(null);
   const [checkOutPhoto, setCheckOutPhoto] = useState<File | null>(null);
   const [logs, setLogs] = useState<AttendanceRow[]>([]);
@@ -203,21 +204,25 @@ export default function Home() {
 
     if (!checkInPhoto) {
       alert("Please choose a check-in photo first.");
+      setStatus("");
       return;
     }
 
     setLoading(true);
+    setStatus("Processing photo...");
+
     const compressed = await compressImage(checkInPhoto)
     const fileExt = checkInPhoto.name.split(".").pop();
     const fileName = `${user.id}-checkin-${Date.now()}.${fileExt}`;
     const filePath = fileName;
-
+    setStatus("Uploading");
     const { error: uploadError } = await supabase.storage
       .from("attendance-photos")
       .upload(filePath, compressed);
 
     if (uploadError) {
       setLoading(false);
+      setStatus("");
       alert(uploadError.message);
       return;
     }
@@ -227,7 +232,7 @@ export default function Home() {
       .getPublicUrl(filePath);
 
     const imageUrl = publicUrlData.publicUrl;
-
+    setStatus("Saving attendance...");
     const { error } = await supabase.from("attendance_logs").insert([
       {
         user_id: user.id,
@@ -237,14 +242,15 @@ export default function Home() {
     ]);
 
     setLoading(false);
+    setStatus("");
 
     if (error) {
+      setStatus("");
       alert(error.message);
     } else {
       alert("Checked in successfully!");
       setCheckInPhoto(null);
       await loadActiveShift(user.id);
-      await loadLogs(user.id);
     }
   };
 
@@ -256,10 +262,12 @@ export default function Home() {
 
     if (!checkOutPhoto) {
       alert("Please choose a check-out photo first.");
+      setStatus("");
       return;
     }
 
     setLoading(true);
+    setStatus("Processing photo...");
     const compressed = await compressImage(checkOutPhoto);
 
     const { data, error } = await supabase
@@ -278,6 +286,7 @@ export default function Home() {
 
     if (!data || data.length === 0) {
       setLoading(false);
+      setStatus("");
       alert("No active check-in found.");
       return;
     }
@@ -287,13 +296,14 @@ export default function Home() {
     const fileExt = checkOutPhoto.name.split(".").pop();
     const fileName = `${user.id}-checkout-${Date.now()}.${fileExt}`;
     const filePath = fileName;
-
+    setStatus("Uploading...");
     const { error: uploadError } = await supabase.storage
       .from("attendance-photos")
       .upload(filePath, compressed);
 
     if (uploadError) {
       setLoading(false);
+      setStatus("");
       alert(uploadError.message);
       return;
     }
@@ -303,7 +313,7 @@ export default function Home() {
       .getPublicUrl(filePath);
 
     const imageUrl = publicUrlData.publicUrl;
-
+    setStatus("Saving attendance...")
     const { error: updateError } = await supabase
       .from("attendance_logs")
       .update({
@@ -313,15 +323,16 @@ export default function Home() {
       .eq("id", latest.id);
 
     setLoading(false);
+    setStatus("");
 
     if (updateError) {
+      setStatus("");
       alert(updateError.message);
     } else {
       alert("Checked out successfully!");
       setCheckOutPhoto(null);
       setActiveShift(null);
       await loadActiveShift(user.id);
-      await loadLogs(user.id);
     }
   };
 
@@ -411,7 +422,7 @@ const compressImage = (file: File): Promise<File> => {
       img.onload = () => {
         const canvas = document.createElement("canvas");
 
-        const MAX_WIDTH = 480;
+        const MAX_WIDTH = 360;
         const scaleSize = Math.min(1, MAX_WIDTH / img.width);
 
         canvas.width = img.width * scaleSize;
@@ -439,7 +450,7 @@ const compressImage = (file: File): Promise<File> => {
             resolve(compressedFile);
           },
           "image/jpeg",
-          0.5
+          0.4
         );
       };
 
@@ -607,7 +618,22 @@ const compressImage = (file: File): Promise<File> => {
             />
           </div>
         )}
-
+  {status && (
+   <div
+    style={{
+      marginTop: 14,
+      padding: 12,
+      borderRadius: 14,
+      background: "rgba(255,255,255,0.72)",
+      color: "#1f4860",
+      fontSize: 14,
+      fontWeight: 600,
+      textAlign: "center",
+    }}
+  >
+    {status}
+  </div>
+)}
         <div style={{ display: "grid", gap: 12, marginTop: 18 }}>
           <button
             onClick={handleCheckIn}
