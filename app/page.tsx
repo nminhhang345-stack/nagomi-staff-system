@@ -390,33 +390,47 @@ export default function Home() {
   }, [filteredLogs, hourlyRate]);
 const compressImage = (file: File): Promise<File> => {
   return new Promise((resolve) => {
+    if (file.size < 300 * 1024) {
+      resolve(file);
+      return;
+    }
+
     const img = new Image();
     const reader = new FileReader();
 
     reader.readAsDataURL(file);
 
     reader.onload = (event) => {
-      if (!event.target?.result) return;
+      if (!event.target?.result) {
+        resolve(file);
+        return;
+      }
 
       img.src = event.target.result as string;
 
       img.onload = () => {
         const canvas = document.createElement("canvas");
 
-        const MAX_WIDTH = 800;
-        const scaleSize = MAX_WIDTH / img.width;
+        const MAX_WIDTH = 480;
+        const scaleSize = Math.min(1, MAX_WIDTH / img.width);
 
-        canvas.width = MAX_WIDTH;
+        canvas.width = img.width * scaleSize;
         canvas.height = img.height * scaleSize;
 
         const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         canvas.toBlob(
           (blob) => {
-            if (!blob) return;
+            if (!blob) {
+              resolve(file);
+              return;
+            }
 
             const compressedFile = new File([blob], file.name, {
               type: "image/jpeg",
@@ -425,10 +439,14 @@ const compressImage = (file: File): Promise<File> => {
             resolve(compressedFile);
           },
           "image/jpeg",
-          0.7
+          0.5
         );
       };
+
+      img.onerror = () => resolve(file);
     };
+
+    reader.onerror = () => resolve(file);
   });
 };
   if (!user) {
