@@ -216,6 +216,10 @@ if (currentTime < 9 || currentTime > 21.8) {
  const handleCheckIn = async () => {
   const now = new Date();
   const hour = now.getHours() + now.getMinutes() / 60;
+  if (profile?.role !== "admin" && hour < 9) {
+  alert("Check-in only allowed after 09:00");
+  return;
+}
 
   if (hour < 9) {
   alert("Check-in only allowed after 09:00");
@@ -293,6 +297,10 @@ if (currentTime < 9 || currentTime > 21.8) {
   const handleCheckOut = async () => {
     const now = new Date();
     const hour = now.getHours() + now.getMinutes() / 60;
+    if (profile?.role !== "admin" && hour > 21.5) {
+    alert("Check-out must be before 21:30");
+    return;
+}
 
     if (hour > 21.6) {
   alert("Check-out must be before 21:30");
