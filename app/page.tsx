@@ -30,8 +30,9 @@ export default function Home() {
   const [activeShift, setActiveShift] = useState<AttendanceRow | null>(null);
   const [loading, setLoading] = useState(false);
   const getCurrentTime = () => {
-    const now = new Date();
-    return now.getHours() + now.getMinutes() / 60;
+    const current = new Date();
+    return current.getHours() + current.getMinutes() / 60;
+  };
 
   const [status, setStatus] = useState("");
   const [cameraMode, setCameraMode] = useState<"checkin" | "checkout" | null>(null);
@@ -212,155 +213,181 @@ if (currentTime < 9 || currentTime > 21.8) {
   alert("Check-in not allowed at this time.");
   return;
 }
-  const handleCheckIn = async () => {
-    if (!user) {
-      alert("Please log in first.");
-      return;
-    }
+ const handleCheckIn = async () => {
+  const now = new Date();
+  const hour = now.getHours() + now.getMinutes() / 60;
 
-    if (activeShift) {
-      alert("You are already checked in.");
-      return;
-    }
+  if (hour < 9) {
+  alert("Check-in only allowed after 09:00");
+  return;
+}
+  if (!user) {
+    alert("Please log in first.");
+    return;
+  }
 
-    if (!capturedBlob || cameraMode !== "checkin") {
-      alert("Please choose a check-in photo first.");
-      setStatus("");
-      return;
-    }
+  const currentTime = getCurrentTime();
+  if (currentTime < 9) {
+    alert("Check-in is only allowed after 09:00.");
+    return;
+  }
 
-    setLoading(true);
-    setStatus("Processing photo...");
+  if (activeShift) {
+    alert("You are already checked in.");
+    return;
+  }
 
-    const fileName = `${user.id}-checkin-${Date.now()}.jpg`;
-    const filePath = fileName;
-    setStatus("Uploading");
-    const { error: uploadError } = await supabase.storage
-      .from("attendance-photos")
-      .upload(filePath, capturedBlob, {
-        contentType: "image/jpeg",
-      });
+  if (!capturedBlob || cameraMode !== "checkin") {
+    alert("Please take a check-in photo first.");
+    setStatus("");
+    return;
+  }
 
-    if (uploadError) {
-      setLoading(false);
-      setStatus("");
-      alert(uploadError.message);
-      return;
-    }
+  setLoading(true);
+  setStatus("Uploading...");
 
-    const { data: publicUrlData } = supabase.storage
-      .from("attendance-photos")
-      .getPublicUrl(filePath);
+  const fileName = `${user.id}-checkin-${Date.now()}.jpg`;
+  const filePath = fileName;
 
-    const imageUrl = publicUrlData.publicUrl;
-    setStatus("Saving attendance...");
-    const { error } = await supabase.from("attendance_logs").insert([
-      {
-        user_id: user.id,
-        check_in_time: new Date().toISOString(),
-        check_in_image_url: imageUrl,
-      },
-    ]);
+  const { error: uploadError } = await supabase.storage
+    .from("attendance-photos")
+    .upload(filePath, capturedBlob, {
+      contentType: "image/jpeg",
+    });
 
+  if (uploadError) {
     setLoading(false);
     setStatus("");
+    alert(uploadError.message);
+    return;
+  }
 
-    if (error) {
-      setStatus("");
-      alert(error.message);
-    } else {
-      setStatus("Checked in successfully.");
-      setTimeout(() => setStatus(""), 1500);
-      resetCapturedPhoto();
-      setCameraMode(null);
-      await loadActiveShift(user.id);
-    }
-  };
+  const { data: publicUrlData } = supabase.storage
+    .from("attendance-photos")
+    .getPublicUrl(filePath);
+
+  const imageUrl = publicUrlData.publicUrl;
+
+  setStatus("Saving attendance...");
+
+  const { error } = await supabase.from("attendance_logs").insert([
+    {
+      user_id: user.id,
+      check_in_time: new Date().toISOString(),
+      check_in_image_url: imageUrl,
+    },
+  ]);
+
+  setLoading(false);
+  setStatus("");
+
+  if (error) {
+    alert(error.message);
+  } else {
+    resetCapturedPhoto();
+    setCameraMode(null);
+    await loadActiveShift(user.id);
+  }
+};
 
   const handleCheckOut = async () => {
-    if (!user) {
-      alert("Please log in first.");
-      return;
-    }
+    const now = new Date();
+    const hour = now.getHours() + now.getMinutes() / 60;
 
-    if (!capturedBlob || cameraMode !== "checkout") {
-      alert("Please choose a check-out photo first.");
-      setStatus("");
-      return;
-    }
+    if (hour > 21.6) {
+  alert("Check-out must be before 21:30");
+  return;
+}
+  if (!user) {
+    alert("Please log in first.");
+    return;
+  }
 
-    setLoading(true);
-    setStatus("Processing photo...");
-   
-    const { data, error } = await supabase
-      .from("attendance_logs")
-      .select("*")
-      .eq("user_id", user.id)
-      .is("check_out_time", null)
-      .order("created_at", { ascending: false })
-      .limit(1);
+  const currentTime = getCurrentTime();
+  if (currentTime > 21.75) {
+    alert("Check-out must be before 21:45.");
+    return;
+  }
 
-    if (error) {
-      setLoading(false);
-      setStatus("");
-      alert(error.message);
-      return;
-    }
+  if (!capturedBlob || cameraMode !== "checkout") {
+    alert("Please take a check-out photo first.");
+    setStatus("");
+    return;
+  }
 
-    if (!data || data.length === 0) {
-      setLoading(false);
-      setStatus("");
-      alert("No active check-in found.");
-      return;
-    }
+  setLoading(true);
+  setStatus("Finding active shift...");
 
-    const latest = data[0];
+  const { data, error } = await supabase
+    .from("attendance_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .is("check_out_time", null)
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-    const fileName = `${user.id}-checkout-${Date.now()}.jpg`;
-    const filePath = fileName;
-    setStatus("Uploading...");
-    const { error: uploadError } = await supabase.storage
-      .from("attendance-photos")
-      .upload(filePath, capturedBlob, {
-        contentType: "image/jpeg",
-      });
-
-    if (uploadError) {
-      setLoading(false);
-      setStatus("");
-      alert(uploadError.message);
-      return;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("attendance-photos")
-      .getPublicUrl(filePath);
-
-    const imageUrl = publicUrlData.publicUrl;
-    setStatus("Saving attendance...");
-    const { error: updateError } = await supabase
-      .from("attendance_logs")
-      .update({
-        check_out_time: new Date().toISOString(),
-        check_out_image_url: imageUrl,
-      })
-      .eq("id", latest.id);
-
+  if (error) {
     setLoading(false);
     setStatus("");
+    alert(error.message);
+    return;
+  }
 
-    if (updateError) {
-      setStatus("");
-      alert(updateError.message);
-    } else {
-      setStatus("Checked out successfully.");
-      setTimeout(() => setStatus(""), 1500);
-      resetCapturedPhoto();
-      setCameraMode(null);
-      setActiveShift(null);
-      await loadActiveShift(user.id);
-    }
-  };
+  if (!data || data.length === 0) {
+    setLoading(false);
+    setStatus("");
+    alert("No active check-in found.");
+    return;
+  }
+
+  const latest = data[0];
+
+  const fileName = `${user.id}-checkout-${Date.now()}.jpg`;
+  const filePath = fileName;
+
+  setStatus("Uploading...");
+
+  const { error: uploadError } = await supabase.storage
+    .from("attendance-photos")
+    .upload(filePath, capturedBlob, {
+      contentType: "image/jpeg",
+    });
+
+  if (uploadError) {
+    setLoading(false);
+    setStatus("");
+    alert(uploadError.message);
+    return;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("attendance-photos")
+    .getPublicUrl(filePath);
+
+  const imageUrl = publicUrlData.publicUrl;
+
+  setStatus("Saving attendance...");
+
+  const { error: updateError } = await supabase
+    .from("attendance_logs")
+    .update({
+      check_out_time: new Date().toISOString(),
+      check_out_image_url: imageUrl,
+    })
+    .eq("id", latest.id);
+
+  setLoading(false);
+  setStatus("");
+
+  if (updateError) {
+    alert(updateError.message);
+  } else {
+    resetCapturedPhoto();
+    setCameraMode(null);
+    setActiveShift(null);
+    await loadActiveShift(user.id);
+  }
+};
 
   const hourlyRate = profile?.hourly_rate ?? 25000;
 
@@ -736,7 +763,9 @@ const resetCapturedPhoto = () => {
             style={mainBlueBtn}
             onClick={() => {
               resetCapturedPhoto();
-              startCamera(cameraMode);
+              if (cameraMode) {
+               startCamera(cameraMode);
+            }
             }}
           >
             Retake Photo
@@ -770,7 +799,7 @@ const resetCapturedPhoto = () => {
           </button>
         </div>
 
-        {activeShift && activeShift.check_in_image_url && (
+        {activeShift?.check_in_image_url && (
           <div style={photoPreviewCard}>
             <div style={sectionTitle}>Latest Check-in Photo</div>
             <img
@@ -1275,4 +1304,4 @@ const imageLabel: React.CSSProperties = {
   fontWeight: 700,
   marginBottom: 6,
   fontSize: 14,
-};
+}
