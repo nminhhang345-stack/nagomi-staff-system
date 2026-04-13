@@ -29,6 +29,9 @@ export default function Home() {
 
   const [activeShift, setActiveShift] = useState<AttendanceRow | null>(null);
   const [loading, setLoading] = useState(false);
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.getHours() + now.getMinutes() / 60;
 
   const [status, setStatus] = useState("");
   const [cameraMode, setCameraMode] = useState<"checkin" | "checkout" | null>(null);
@@ -185,7 +188,7 @@ export default function Home() {
     if (error) {
       alert(error.message);
     } else {
-      alert("Check your email to reset password.");
+      setStatus("Check your email to reset password.IMPORTANT: Please wait a few minutes before trying again!");
     }
   };
 
@@ -199,6 +202,16 @@ export default function Home() {
     }
   };
 
+ const now = new Date();
+ const hours = now.getHours();
+ const minutes = now.getMinutes();
+
+ const currentTime = hours + minutes / 60;
+
+if (currentTime < 9 || currentTime > 21.8) {
+  alert("Check-in not allowed at this time.");
+  return;
+}
   const handleCheckIn = async () => {
     if (!user) {
       alert("Please log in first.");
