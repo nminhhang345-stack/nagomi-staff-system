@@ -209,33 +209,17 @@ export default function Home() {
 
  const currentTime = hours + minutes / 60;
 
-if (currentTime < 9 || currentTime > 21.8) {
-  alert("Check-in not allowed at this time.");
-  return;
-}
  const handleCheckIn = async () => {
+  if (!user) {
+    alert("Please log in first");
+    return;
+  }
   const now = new Date();
   const hour = now.getHours() + now.getMinutes() / 60;
   if (profile?.role !== "admin" && hour < 9) {
   alert("Check-in only allowed after 09:00");
   return;
-}
-
-  if (hour < 9) {
-  alert("Check-in only allowed after 09:00");
-  return;
-}
-  if (!user) {
-    alert("Please log in first.");
-    return;
   }
-
-  const currentTime = getCurrentTime();
-  if (currentTime < 9) {
-    alert("Check-in is only allowed after 09:00.");
-    return;
-  }
-
   if (activeShift) {
     alert("You are already checked in.");
     return;
@@ -295,28 +279,16 @@ if (currentTime < 9 || currentTime > 21.8) {
 };
 
   const handleCheckOut = async () => {
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
     const now = new Date();
     const hour = now.getHours() + now.getMinutes() / 60;
-    if (profile?.role !== "admin" && hour > 21.5) {
+    if (profile?.role !== "admin" && hour > 21.6) {
     alert("Check-out must be before 21:30");
     return;
 }
-
-    if (hour > 21.6) {
-  alert("Check-out must be before 21:30");
-  return;
-}
-  if (!user) {
-    alert("Please log in first.");
-    return;
-  }
-
-  const currentTime = getCurrentTime();
-  if (currentTime > 21.75) {
-    alert("Check-out must be before 21:45.");
-    return;
-  }
-
   if (!capturedBlob || cameraMode !== "checkout") {
     alert("Please take a check-out photo first.");
     setStatus("");
