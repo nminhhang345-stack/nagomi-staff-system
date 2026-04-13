@@ -1,11 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";;
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.replace("#", ""));
+      const access_token = params.get("access_token");
+
+       if (access_token) {
+         supabase.auth.setSession({
+           access_token,
+           refresh_token: access_token,
+        });
+    }
+  }
+}, []);
 
   const handleUpdatePassword = async () => {
     if (!password) {
