@@ -857,7 +857,7 @@ const resetCapturedPhoto = () => {
                     <div style={logRow}>
                       <span style={logLabel}>Salary</span>
                       <span style={logValue}>
-                        {salary !== null ? `${salary.toLocaleString()} VND` : "-"}
+                        {salary ? Math.floor(salary).toLocaleString() : "-"}
                       </span>
                     </div>
 
