@@ -38,6 +38,90 @@ export default function AdminPage() {
 
   const [editCheckIn, setEditCheckIn] = useState("");
   const [editCheckOut, setEditCheckOut] = useState("");
+  const [holidayDate, setHolidayDate] = useState("");
+  const [holidayName, setHolidayName] = useState("");
+  const [multiplier, setMultiplier] = useState(2);
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [editingHolidayId, setEditingHolidayId] = useState<number | null>(null);
+  const loadHolidays = async () => {
+  const { data, error } = await supabase
+    .from("holiday_rates")
+    .select("*")
+    .order("holiday_date", { ascending: true });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setHolidays(data || []);
+};
+
+const handleSaveHoliday = async () => {
+  if (!holidayDate || !holidayName || !multiplier) {
+    alert("Please fill all holiday fields.");
+    return;
+  }
+
+  if (editingHolidayId) {
+    const { error } = await supabase
+      .from("holiday_rates")
+      .update({
+        holiday_date: holidayDate,
+        holiday_name: holidayName,
+        multiplier,
+      })
+      .eq("id", editingHolidayId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  } else {
+    const { error } = await supabase.from("holiday_rates").insert([
+      {
+        holiday_date: holidayDate,
+        holiday_name: holidayName,
+        multiplier,
+      },
+    ]);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  }
+
+  setHolidayDate("");
+  setHolidayName("");
+  setMultiplier(2);
+  setEditingHolidayId(null);
+  await loadHolidays();
+};
+
+const handleEditHoliday = (holiday: any) => {
+  setHolidayDate(holiday.holiday_date);
+  setHolidayName(holiday.holiday_name);
+  setMultiplier(Number(holiday.multiplier));
+  setEditingHolidayId(holiday.id);
+};
+
+const handleDeleteHoliday = async (id: number) => {
+  const confirmed = window.confirm("Delete this holiday rule?");
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("holiday_rates")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  await loadHolidays();
+};
 
   useEffect(() => {
     const init = async () => {
@@ -55,6 +139,8 @@ export default function AdminPage() {
 
       await loadMyProfile(currentUser.id);
       await loadProfiles();
+      await loadLogs();
+      await loadHolidays();
       setLoading(false);
     };
 
@@ -270,45 +356,6 @@ export default function AdminPage() {
     );
   }, [filteredLogs]);
 
-  const exportSalaryCSV = () => {
-    if (summaryByStaff.length === 0) {
-      alert("No payroll data to export.");
-      return;
-    }
-
-    const rows = [
-      ["Staff Name", "Hourly Rate (VND)", "Total Hours", "Total Salary (VND)"],
-      ...summaryByStaff.map((item) => [
-        item.name,
-        item.hourlyRate.toString(),
-        item.totalHours.toFixed(2),
-        Math.round(item.totalSalary).toString(),
-      ]),
-    ];
-
-    const csvContent = rows
-      .map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-      )
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const now = new Date();
-    const dateLabel = now.toISOString().slice(0, 10);
-    const fileName = `payroll-${filter}-${dateLabel}.csv`;
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(url);
-  };
-
   if (loading) {
     return (
       <div style={pageWrap}>
@@ -406,9 +453,6 @@ export default function AdminPage() {
           >
             This Month
           </button>
-          <button style={mainBlueBtnSmall} onClick={exportSalaryCSV}>
-            Export CSV
-          </button>
         </div>
 
         <div style={statGrid}>
@@ -468,8 +512,65 @@ export default function AdminPage() {
             </div>
           )}
         </div>
-
+        
         <div style={sectionCard}>
+          <div style={sectionTitle}>Holiday Rate Rules</div>
+
+     <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+    <input
+      type="date"
+      value={holidayDate}
+      onChange={(e) => setHolidayDate(e.target.value)}
+      style={inputStyle}
+    />
+
+    <input
+      type="text"
+      placeholder="Holiday name"
+      value={holidayName}
+      onChange={(e) => setHolidayName(e.target.value)}
+      style={inputStyle}
+    />
+
+    <input
+      type="number"
+      step="0.5"
+      min="1"
+      value={multiplier}
+      onChange={(e) => setMultiplier(Number(e.target.value))}
+      style={inputStyle}
+    />
+
+    <button onClick={handleSaveHoliday} style={mainBlueBtn}>
+      {editingHolidayId ? "Update Holiday" : "Add Holiday"}
+    </button>
+  </div>
+
+  <div style={{ marginTop: 20, display: "grid", gap: 10 }}>
+    {holidays.length === 0 ? (
+      <div style={mutedBox}>No holiday rules yet.</div>
+    ) : (
+      holidays.map((holiday) => (
+        <div key={holiday.id} style={rowCard}>
+          <div>
+            <div style={strongText}>{holiday.holiday_name}</div>
+            <div style={mutedText}>{holiday.holiday_date}</div>
+            <div style={strongText}>x{holiday.multiplier}</div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => handleEditHoliday(holiday)} style={smallBlueBtn}>
+              Edit
+            </button>
+            <button onClick={() => handleDeleteHoliday(holiday.id)} style={smallDeleteBtn}>
+              Delete
+            </button>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</div>
           <div style={sectionTitle}>Attendance Logs</div>
 
           <div style={{ display: "grid", gap: 16, marginTop: 14 }}>
@@ -486,15 +587,29 @@ export default function AdminPage() {
 
                 const hourlyRate = log.profile?.hourly_rate || 25000;
 
-                let hours: number | null = null;
-                let salary: number | null = null;
+                 const logDate = log.check_in_time
+                  ? new Date(log.check_in_time).toISOString().split("T")[0]
+                  : null;
+
+                const matchedHoliday = holidays.find(
+                 (holiday) => holiday.holiday_date === logDate
+                 );
+
+                const appliedMultiplier = matchedHoliday
+                 ? Number(matchedHoliday.multiplier)
+                 : 1;
+
+                const finalHourlyRate = hourlyRate * appliedMultiplier;
+
+                 let hours: number | null = null;
+                 let salary: number | null = null;
 
                 if (checkIn && checkOut) {
-                  const diff =
-                    (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
-                  hours = diff;
-                  salary = diff * hourlyRate;
-                }
+                   const diff =
+                      (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
+                    hours = diff;
+                    salary = diff * finalHourlyRate;
+                 }
 
                 const isEditing = editingId === log.id;
 
@@ -558,7 +673,17 @@ export default function AdminPage() {
                           {hours !== null ? `${hours.toFixed(2)} hrs` : "In progress"}
                         </span>
                       </div>
+                      <div style={logRow}>
+                        <span style={logLabel}>Multiplier</span>
+                        <span style={logValue}>x{appliedMultiplier}</span>
+                      </div>
 
+                      <div style={logRow}>
+                        <span style={logLabel}>Final Rate</span>
+                        <span style={logValue}>
+                            {finalHourlyRate.toLocaleString()} VND/h
+                        </span>
+                      </div>
                       <div style={logRow}>
                         <span style={logLabel}>Salary</span>
                         <span style={logValue}>
@@ -633,7 +758,6 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
@@ -1013,18 +1137,6 @@ const mainBlueBtn: React.CSSProperties = {
   cursor: "pointer",
 };
 
-const mainBlueBtnSmall: React.CSSProperties = {
-  border: "none",
-  borderRadius: 999,
-  padding: "10px 16px",
-  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
-  color: "white",
-  fontSize: 14,
-  fontWeight: 700,
-  boxShadow: "0 10px 24px rgba(37, 116, 160, 0.18)",
-  cursor: "pointer",
-};
-
 const softPearlBtn: React.CSSProperties = {
   width: "100%",
   border: "none",
@@ -1100,4 +1212,31 @@ const smallCancelBtn: React.CSSProperties = {
   color: "#1b4f69",
   fontWeight: 700,
   cursor: "pointer",
+};
+const mutedBox: React.CSSProperties = {
+  padding: 14,
+  borderRadius: 14,
+  background: "rgba(242,247,250,0.9)",
+  color: "#678194",
+};
+
+const rowCard: React.CSSProperties = {
+  background: "rgba(248,252,255,0.95)",
+  borderRadius: 18,
+  padding: 14,
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const strongText: React.CSSProperties = {
+  fontWeight: 700,
+  color: "#173b4d",
+};
+
+const mutedText: React.CSSProperties = {
+  color: "#6a8597",
+  fontSize: 14,
 };
