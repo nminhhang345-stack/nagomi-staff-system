@@ -314,47 +314,68 @@ const handleDeleteHoliday = async (id: number) => {
   }, [logs, filter]);
 
   const summaryByStaff = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        name: string;
-        hourlyRate: number;
-        totalHours: number;
-        totalSalary: number;
-      }
-    >();
+  const map = new Map<
+    string,
+    {
 
-    for (const log of filteredLogs) {
-      const staffId = log.user_id || "unknown";
-      const name = log.profile?.name || "Unknown staff";
-      const hourlyRate = log.profile?.hourly_rate || 25000;
+      name: string;
 
+      hourlyRate: number;
+
+      totalHours: number;
+
+      totalSalary: number;
+
+    }
+  >();
+  for (const log of filteredLogs) {
+    const staffId = log.user_id || "unknown";
+    const name = log.profile?.name || "Unknown staff";
+    const hourlyRate = log.profile?.hourly_rate || 25000;
+    const logDate = log.check_in_time
+      ? new Date(log.check_in_time).toISOString().split("T")[0]
+      : null;
+    const matchedHoliday = holidays.find(
+     (holiday) => holiday.holiday_date === logDate
+
+    );
+    const appliedMultiplier = matchedHoliday
+      ? Number(matchedHoliday.multiplier)
+      : 1;
+     const finalHourlyRate = hourlyRate * appliedMultiplier;
       if (!map.has(staffId)) {
-        map.set(staffId, {
-          name,
-          hourlyRate,
-          totalHours: 0,
-          totalSalary: 0,
-        });
-      }
+       map.set(staffId, {
+        name,
+        hourlyRate,
+        totalHours: 0,
+        totalSalary: 0,
 
-      const item = map.get(staffId)!;
+      });
 
-      if (log.check_in_time && log.check_out_time) {
-        const checkIn = new Date(log.check_in_time);
-        const checkOut = new Date(log.check_out_time);
-        const hours =
-          (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
-
-        item.totalHours += hours;
-        item.totalSalary += hours * hourlyRate;
-      }
     }
 
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-  }, [filteredLogs]);
+    const item = map.get(staffId)!;
+
+    if (log.check_in_time && log.check_out_time) {
+
+      const checkIn = new Date(log.check_in_time);
+
+      const checkOut = new Date(log.check_out_time);
+
+      const hours =
+
+        (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
+
+      item.totalHours += hours;
+
+      item.totalSalary += Math.floor(hours * finalHourlyRate);
+
+    }
+  }
+  return Array.from(map.values()).sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+}, [filteredLogs, holidays]);
 
   if (loading) {
     return (
@@ -469,9 +490,9 @@ const handleDeleteHoliday = async (id: number) => {
           <div style={statCard}>
             <div style={statLabel}>Filtered Payroll</div>
             <div style={statValue}>
-              {summaryByStaff
-                .reduce((sum, item) => sum + item.totalSalary, 0)
-                .toLocaleString()}{" "}
+              {Math.floor(
+                summaryByStaff.reduce((sum, item) => sum + item.totalSalary, 0)
+              ).toLocaleString()}{" "}
               VND
             </div>
           </div>
@@ -503,7 +524,7 @@ const handleDeleteHoliday = async (id: number) => {
                     <div style={summaryMetaItem}>
                       <span style={summaryMetaLabel}>Salary</span>
                       <span style={summaryMetaValue}>
-                        {item.totalSalary.toLocaleString()} VND
+                        {Math.floor(item.totalSalary).toLocaleString()} VND
                       </span>
                     </div>
                   </div>
@@ -687,7 +708,7 @@ const handleDeleteHoliday = async (id: number) => {
                       <div style={logRow}>
                         <span style={logLabel}>Salary</span>
                         <span style={logValue}>
-                          {salary !== null ? `${salary.toLocaleString()} VND` : "-"}
+                          {salary ? Math.floor(salary).toLocaleString() : "-"}
                         </span>
                       </div>
                     </div>
