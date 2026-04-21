@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import * as XLSX from "xlsx";
 
 type AttendanceRow = {
   id: number;
@@ -376,7 +377,49 @@ const handleDeleteHoliday = async (id: number) => {
     a.name.localeCompare(b.name)
   );
 }, [filteredLogs, holidays]);
+ const handleExportExcel = () => {
+  const rows = filteredLogs.map((log) => {
+    const checkIn = log.check_in_time ? new Date(log.check_in_time) : null;
+    const checkOut = log.check_out_time ? new Date(log.check_out_time) : null;
+    const hourlyRate = log.profile?.hourly_rate || 25000;
 
+    const logDate = log.check_in_time
+      ? new Date(log.check_in_time).toISOString().split("T")[0]
+      : null;
+
+    const matchedHoliday = holidays.find(
+      (holiday) => holiday.holiday_date === logDate
+    );
+
+    const appliedMultiplier = matchedHoliday
+      ? Number(matchedHoliday.multiplier)
+      : 1;
+
+    const finalHourlyRate = hourlyRate * appliedMultiplier;
+
+    let hours = 0;
+    let salary = 0;
+
+    if (checkIn && checkOut) {
+      hours = (checkOut.getTime() - checkIn.getTime()) / 1000 / 60 / 60;
+      salary = Math.floor(hours * finalHourlyRate);
+    }
+
+    return {
+      Staff: log.profile?.name || "Unknown staff",
+      "Check In": checkIn ? checkIn.toLocaleString() : "",
+      "Check Out": checkOut ? checkOut.toLocaleString() : "",
+      Hours: Number(hours.toFixed(2)),
+      Salary: salary,
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
+
+  XLSX.writeFile(workbook, `nagomi-payroll.xlsx`);
+};
   if (loading) {
     return (
       <div style={pageWrap}>
@@ -475,6 +518,9 @@ const handleDeleteHoliday = async (id: number) => {
             This Month
           </button>
         </div>
+        <button style={exportBtn} onClick={handleExportExcel}>
+         Export Payroll
+        </button>
 
         <div style={statGrid}>
           <div style={statCard}>
@@ -492,8 +538,7 @@ const handleDeleteHoliday = async (id: number) => {
             <div style={statValue}>
               {Math.floor(
                 summaryByStaff.reduce((sum, item) => sum + item.totalSalary, 0)
-              ).toLocaleString()}{" "}
-              VND
+              ).toLocaleString()} VND
             </div>
           </div>
         </div>
@@ -1260,4 +1305,14 @@ const strongText: React.CSSProperties = {
 const mutedText: React.CSSProperties = {
   color: "#6a8597",
   fontSize: 14,
+};
+const exportBtn: React.CSSProperties = {
+  padding: "10px 18px",
+  borderRadius: 14,
+  border: "none",
+  background: "linear-gradient(135deg, #8ec5fc 0%, #e0c3fc 100%)",
+  color: "#0f2a3a",
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
 };
