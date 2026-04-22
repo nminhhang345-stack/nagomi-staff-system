@@ -216,8 +216,8 @@ export default function Home() {
   }
   const now = new Date();
   const hour = now.getHours() + now.getMinutes() / 60;
-  if (profile?.role !== "admin" && hour < 9) {
-  alert("Check-in only allowed after 09:00");
+  if (profile?.role !== "admin" && (hour < 9 || hour > 21.5)) {
+  alert("Check-in only allowed between 09:00 and 21:30");
   return;
   }
   if (activeShift) {
@@ -285,8 +285,8 @@ export default function Home() {
     }
     const now = new Date();
     const hour = now.getHours() + now.getMinutes() / 60;
-    if (profile?.role !== "admin" && hour > 21.6) {
-    alert("Check-out must be before 21:30");
+    if (profile?.role !== "admin" && hour > 21.75) {
+    alert("Check-out must be before 21:45");
     return;
 }
   if (!capturedBlob || cameraMode !== "checkout") {
