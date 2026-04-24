@@ -6,20 +6,34 @@ import { supabase } from "../../lib/supabaseClient";;
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+useEffect(() => {
+  const handleRecovery = async () => {
+    const { data, error } = await supabase.auth.getSession();
 
-  useEffect(() => {
+    if (error) {
+      console.log("Recovery session error:", error.message);
+      return;
+    }
+
+    if (!data.session) {
+      console.log("No recovery session found.");
+    }
     const hash = window.location.hash;
     if (hash) {
-      const params = new URLSearchParams(hash.replace("#", ""));
+      const params = new URLSearchParams(hash.replace("#", "?"));
       const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
 
-       if (access_token) {
-         supabase.auth.setSession({
-           access_token,
-           refresh_token: access_token,
+      if (access_token && refresh_token) {
+        await supabase.auth.setSession({
+          access_token,
+          refresh_token,
         });
+      }
     }
-  }
+  };
+
+  handleRecovery();
 }, []);
 
   const handleUpdatePassword = async () => {
