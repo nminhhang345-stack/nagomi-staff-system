@@ -12,6 +12,7 @@ type AttendanceRow = {
   created_at: string;
   check_in_image_url?: string | null;
   check_out_image_url?: string | null;
+  is_late?: boolean | null;
 };
 
 type Profile = {
@@ -36,6 +37,8 @@ export default function AdminPage() {
   const [savingId, setSavingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [filter, setFilter] = useState<FilterType>("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [editCheckIn, setEditCheckIn] = useState("");
   const [editCheckOut, setEditCheckOut] = useState("");
@@ -282,6 +285,19 @@ const handleDeleteHoliday = async (id: number) => {
       if (!log.check_in_time) return false;
 
       const checkInDate = new Date(log.check_in_time);
+      if (startDate) {
+         const start = new Date(startDate);
+         start.setHours(0, 0, 0, 0);
+
+     if (checkInDate < start) return false;
+     }
+
+     if (endDate) {
+         const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+
+         if (checkInDate > end) return false;
+     }
 
       if (filter === "all") return true;
 
@@ -312,7 +328,33 @@ const handleDeleteHoliday = async (id: number) => {
 
       return true;
     });
-  }, [logs, filter]);
+  }, [logs, filter, startDate, endDate]);
+
+  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
+  <input
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+    style={inputStyle}
+  />
+
+  <input
+    type="date"
+    value={endDate}
+    onChange={(e) => setEndDate(e.target.value)}
+    style={inputStyle}
+  />
+
+  <button
+    style={filterBtn}
+    onClick={() => {
+      setStartDate("");
+      setEndDate("");
+    }}
+  >
+    Clear Dates
+  </button>
+</div>
 
   const summaryByStaff = useMemo(() => {
   const map = new Map<
@@ -686,6 +728,21 @@ const handleDeleteHoliday = async (id: number) => {
                         <div style={logStaffName}>
                           {log.profile?.name || "Unknown staff"}
                         </div>
+                        {log.is_late && (
+                         <span style={{
+                         background: "#ffe5e5",
+                         color: "#d11a2a",
+                         padding: "4px 10px",
+                         borderRadius: 8,
+                         fontSize: 12,
+                         fontWeight: 700,
+                         display: "inline-block",
+                         marginTop: 4,
+                     }}>
+                         Late
+                      </span>
+                      )}
+
                         <div style={logStaffSub}>
                           {hourlyRate.toLocaleString()} VND/hour
                         </div>
