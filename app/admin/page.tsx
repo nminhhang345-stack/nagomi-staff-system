@@ -279,56 +279,57 @@ const handleDeleteHoliday = async (id: number) => {
   };
 
   const filteredLogs = useMemo(() => {
-    const now = new Date();
+  const now = new Date();
 
-    return logs.filter((log) => {
-      if (!log.check_in_time) return false;
+  return logs.filter((log) => {
+    if (!log.check_in_time) return false;
 
-      const checkInDate = new Date(log.check_in_time);
-      if (startDate) {
-         const start = new Date(startDate);
-         start.setHours(0, 0, 0, 0);
+    const checkInDate = new Date(log.check_in_time);
 
-     if (checkInDate < start) return false;
-     }
+    if (filter === "today") {
+      const sameDay =
+        checkInDate.getFullYear() === now.getFullYear() &&
+        checkInDate.getMonth() === now.getMonth() &&
+        checkInDate.getDate() === now.getDate();
 
-     if (endDate) {
-         const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
+      if (!sameDay) return false;
+    }
 
-         if (checkInDate > end) return false;
-     }
+    if (filter === "week") {
+      const startOfWeek = new Date(now);
+      const day = startOfWeek.getDay();
+      const diff = day === 0 ? 6 : day - 1;
+      startOfWeek.setDate(startOfWeek.getDate() - diff);
+      startOfWeek.setHours(0, 0, 0, 0);
 
-      if (filter === "all") return true;
+      if (checkInDate < startOfWeek) return false;
+    }
 
-      if (filter === "today") {
-        return (
-          checkInDate.getFullYear() === now.getFullYear() &&
-          checkInDate.getMonth() === now.getMonth() &&
-          checkInDate.getDate() === now.getDate()
-        );
-      }
+    if (filter === "month") {
+      const sameMonth =
+        checkInDate.getFullYear() === now.getFullYear() &&
+        checkInDate.getMonth() === now.getMonth();
 
-      if (filter === "week") {
-        const startOfWeek = new Date(now);
-        const day = startOfWeek.getDay();
-        const diff = day === 0 ? 6 : day - 1;
-        startOfWeek.setDate(startOfWeek.getDate() - diff);
-        startOfWeek.setHours(0, 0, 0, 0);
+      if (!sameMonth) return false;
+    }
 
-        return checkInDate >= startOfWeek;
-      }
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
 
-      if (filter === "month") {
-        return (
-          checkInDate.getFullYear() === now.getFullYear() &&
-          checkInDate.getMonth() === now.getMonth()
-        );
-      }
+      if (checkInDate < start) return false;
+    }
 
-      return true;
-    });
-  }, [logs, filter, startDate, endDate]);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (checkInDate > end) return false;
+    }
+
+    return true;
+  });
+}, [logs, filter, startDate, endDate]);
 
   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
   <input
