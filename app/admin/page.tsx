@@ -331,31 +331,6 @@ const handleDeleteHoliday = async (id: number) => {
   });
 }, [logs, filter, startDate, endDate]);
 
-  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
-  <input
-    type="date"
-    value={startDate}
-    onChange={(e) => setStartDate(e.target.value)}
-    style={inputStyle}
-  />
-
-  <input
-    type="date"
-    value={endDate}
-    onChange={(e) => setEndDate(e.target.value)}
-    style={inputStyle}
-  />
-
-  <button
-    style={filterBtn}
-    onClick={() => {
-      setStartDate("");
-      setEndDate("");
-    }}
-  >
-    Clear Dates
-  </button>
-</div>
 
   const summaryByStaff = useMemo(() => {
   const map = new Map<
@@ -561,6 +536,30 @@ const handleDeleteHoliday = async (id: number) => {
             This Month
           </button>
         </div>
+        <div style={{ display: "flex", gap:10, flexWrap: "wrap", marginBottom: 18}}>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={inputStyle}
+             />
+             <input
+              type="date"
+              value={endDate}
+              onChange={(e)=> setEndDate(e.target.value)}
+              style={inputStyle}
+             />
+             <button 
+               style={filterBtn}
+               onClick={() => {
+                setStartDate("");
+                setEndDate("");
+               }}
+            > 
+              Clear Dates
+              </button>
+        </div>
+
         <button style={exportBtn} onClick={handleExportExcel}>
          Export Payroll
         </button>
