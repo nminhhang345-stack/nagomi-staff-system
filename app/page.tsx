@@ -216,7 +216,7 @@ export default function Home() {
   }
   const now = new Date();
   const hour = now.getHours() + now.getMinutes() / 60;
-  const isLate = hour > 9.01; // after 09:05
+  const isLate = hour > 9 || (hours === 9 && minutes >5);
   if (profile?.role !== "admin" && (hour < 9 || hour > 21.5)) {
   alert("Check-in only allowed between 09:00 and 21:30");
   return;
@@ -264,7 +264,8 @@ export default function Home() {
       user_id: user.id,
       check_in_time: new Date().toISOString(),
       check_in_image_url: imageUrl,
-      is_late: isLate, //
+      is_late: isLate, 
+      branch: myProfile?.branch,
     },
   ]);
 

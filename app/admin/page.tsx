@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
 
 type AttendanceRow = {
@@ -13,6 +13,7 @@ type AttendanceRow = {
   check_in_image_url?: string | null;
   check_out_image_url?: string | null;
   is_late?: boolean | null;
+  branch?: string | null;
 };
 
 type Profile = {
@@ -20,6 +21,7 @@ type Profile = {
   name: string | null;
   hourly_rate: number;
   role: string;
+  branch?: string | null;
 };
 
 type LogWithProfile = AttendanceRow & {
@@ -30,7 +32,6 @@ type FilterType = "all" | "today" | "week" | "month";
 
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
-  const [myProfile, setMyProfile] = useState<Profile | null>(null);
   const [logs, setLogs] = useState<LogWithProfile[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,7 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [myProfile, setMyProfile] = useState<any>(null);
 
   const [editCheckIn, setEditCheckIn] = useState("");
   const [editCheckOut, setEditCheckOut] = useState("");
@@ -132,24 +134,18 @@ const handleDeleteHoliday = async (id: number) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      if (session?.user) {
+      setUser(session.user);
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+      await loadProfile(session.user.id);
 
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
-
-      await loadMyProfile(currentUser.id);
       await loadProfiles();
       await loadLogs();
-      await loadHolidays();
-      setLoading(false);
-    };
+    }
+  };
 
-    init();
-  }, []);
+  init();
+ }, []);
 
   useEffect(() => {
     if (profiles.length > 0) {
@@ -157,7 +153,7 @@ const handleDeleteHoliday = async (id: number) => {
     }
   }, [profiles]);
 
-  const loadMyProfile = async (userId: string) => {
+  const loadProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -187,8 +183,8 @@ const handleDeleteHoliday = async (id: number) => {
     const { data, error } = await supabase
       .from("attendance_logs")
       .select("*")
-      .order("created_at", { ascending: false });
-
+      .eq("branch", myProfile?.branch)
+      .order("created_at", { ascending: false })
     if (error) {
       console.log("Logs error:", error);
       return;
