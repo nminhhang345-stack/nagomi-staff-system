@@ -17,6 +17,7 @@ type Profile = {
   name: string | null;
   hourly_rate: number;
   role: string;
+  branch?: string | null
 };
 
 type FilterType = "all" | "today" | "week" | "month";
@@ -25,7 +26,7 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("");const [myProfile, setMyProfile] = useState<any>(null);
 
   const [activeShift, setActiveShift] = useState<AttendanceRow | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,18 @@ export default function Home() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream |null>(null);
+
+  const loadMyProfile = async (userId: string) => {
+  const { data } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (data) {
+    setMyProfile(data);
+  }
+ };
 
   useEffect(() => {
     const loadSession = async () => {
@@ -91,6 +104,7 @@ export default function Home() {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
+      .eq("branch", profile?.branch)
       .eq("id", userId)
       .single();
 
@@ -265,7 +279,7 @@ export default function Home() {
       check_in_time: new Date().toISOString(),
       check_in_image_url: imageUrl,
       is_late: isLate, 
-      branch: myProfile?.branch,
+      branch: profile?.branch,
     },
   ]);
 
@@ -279,6 +293,7 @@ export default function Home() {
     setCameraMode(null);
     await loadActiveShift(user.id);
   }
+
 };
 
   const handleCheckOut = async () => {
