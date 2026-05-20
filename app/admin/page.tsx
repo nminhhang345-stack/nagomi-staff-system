@@ -134,35 +134,43 @@ const handleDeleteHoliday = async (id: number) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session?.user) {
+      if (!session?.user) {
+        setLoading(false);
+      return;
+    }
       setUser(session.user);
 
-      await loadProfile(session.user.id);
+      const profile= await loadProfile(session.user.id);
 
       await loadProfiles();
-      await loadLogs();
+      await loadHolidays();
+      if (profile?.branch) {
+      await loadLogs(profile.branch);
     }
+    setLoading(false);
   };
 
   init();
  }, []);
 
   useEffect(() => {
-    if (profiles.length > 0) {
-      loadLogs();
+    if (profiles.length > 0 && myProfile?.branch) {
+      loadLogs(myProfile.branch);
     }
-  }, [profiles]);
+  }, [profiles.length, myProfile?.branch]);
 
   const loadProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
       setMyProfile(data);
+      return data;
     }
+    return null;
   };
 
   const loadProfiles = async () => {
@@ -179,11 +187,11 @@ const handleDeleteHoliday = async (id: number) => {
     setProfiles(data || []);
   };
 
-  const loadLogs = async () => {
+  const loadLogs = async (branch?: string) => {
     const { data, error } = await supabase
       .from("attendance_logs")
       .select("*")
-      .eq("branch", myProfile?.branch)
+      .eq("branch", branch)
       .order("created_at", { ascending: false })
     if (error) {
       console.log("Logs error:", error);
@@ -348,8 +356,6 @@ const handleDeleteHoliday = async (id: number) => {
     const name = log.profile?.name || "Unknown staff";
     const hourlyRate = Number(log.profile?.hourly_rate || 25000);
     const logDate = log.check_in_time
-      ? new Date(log.check_in_time).toISOString().split("T")[0]
-      : null;
     const matchedHoliday = holidays.find(
      (holiday) => holiday.holiday_date === logDate
 
@@ -675,6 +681,7 @@ const handleDeleteHoliday = async (id: number) => {
     )}
   </div>
 </div>
+<div style={sectionCard}></div>
           <div style={sectionTitle}>Attendance Logs</div>
 
           <div style={{ display: "grid", gap: 16, marginTop: 14 }}>
@@ -806,7 +813,9 @@ const handleDeleteHoliday = async (id: number) => {
                       <div style={logRow}>
                         <span style={logLabel}>Salary</span>
                         <span style={logValue}>
-                          {salary ? Math.floor(salary).toLocaleString() : "-"}
+                          {salary !== null
+                           ? Math.floor(salary).toLocaleString()
+                           : "-"}
                         </span>
                       </div>
                     </div>
