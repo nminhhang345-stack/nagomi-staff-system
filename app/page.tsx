@@ -17,7 +17,7 @@ type Profile = {
   name: string | null;
   hourly_rate: number;
   role: string;
-  branch?: string | null
+  branch?: string 
 };
 
 type FilterType = "all" | "today" | "week" | "month";
@@ -387,7 +387,7 @@ export default function Home() {
   }
 };
 
-  const hourlyRate = profile?.hourly_rate ?? 25000;
+  const hourlyRate = profile?.hourly_rate || 0;
 
   const filteredLogs = useMemo(() => {
     const now = new Date();
