@@ -104,7 +104,6 @@ export default function Home() {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("branch", profile?.branch)
       .eq("id", userId)
       .single();
 
@@ -387,7 +386,10 @@ export default function Home() {
   }
 };
 
-  const hourlyRate = profile?.hourly_rate || 0;
+  const hourlyRate =
+  profile?.hourly_rate != null
+    ? Number(profile.hourly_rate)
+    : 25000
 
   const filteredLogs = useMemo(() => {
     const now = new Date();
