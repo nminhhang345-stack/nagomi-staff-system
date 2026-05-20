@@ -145,7 +145,6 @@ const handleDeleteHoliday = async (id: number) => {
       await loadProfiles();
       await loadHolidays();
       if (profile?.branch) {
-      await loadLogs(profile.branch);
     }
     setLoading(false);
   };
@@ -155,9 +154,9 @@ const handleDeleteHoliday = async (id: number) => {
 
   useEffect(() => {
     if (profiles.length > 0 && myProfile?.branch) {
-      loadLogs(myProfile.branch);
+      loadLogs();
     }
-  }, [profiles.length, myProfile?.branch]);
+  }, [profiles, myProfile]);
 
   const loadProfile = async (userId: string) => {
     const { data, error } = await supabase
