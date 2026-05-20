@@ -346,7 +346,7 @@ const handleDeleteHoliday = async (id: number) => {
   for (const log of filteredLogs) {
     const staffId = log.user_id || "unknown";
     const name = log.profile?.name || "Unknown staff";
-    const hourlyRate = log.profile?.hourly_rate ?? 0;
+    const hourlyRate = log.profile?.hourly_rate ?? 25000;
     const logDate = log.check_in_time
       ? new Date(log.check_in_time).toISOString().split("T")[0]
       : null;
@@ -395,7 +395,7 @@ const handleDeleteHoliday = async (id: number) => {
   const rows = filteredLogs.map((log) => {
     const checkIn = log.check_in_time ? new Date(log.check_in_time) : null;
     const checkOut = log.check_out_time ? new Date(log.check_out_time) : null;
-    const hourlyRate = log.profile?.hourly_rate ?? 0;
+    const hourlyRate = log.profile?.hourly_rate ?? 25000;
 
     const logDate = log.check_in_time
       ? new Date(log.check_in_time).toISOString().split("T")[0]
@@ -689,7 +689,7 @@ const handleDeleteHoliday = async (id: number) => {
                   ? new Date(log.check_out_time)
                   : null;
 
-                const hourlyRate = log.profile?.hourly_rate ?? 0;
+                const hourlyRate = log.profile?.hourly_rate ?? 25000;
 
                  const logDate = log.check_in_time
                   ? new Date(log.check_in_time).toISOString().split("T")[0]
