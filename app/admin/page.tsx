@@ -199,6 +199,19 @@ const handleDeleteHoliday = async (id: number) => {
     const { data, error } = await query;
     console.log("attendance error", error);
     console.log("attendance rows", data);
+    console.log(
+   "May logs",
+    data?.filter((row) => {
+    if (!row.check_in_time) return false;
+
+    const d = new Date(row.check_in_time);
+
+    return (
+      d >= new Date("2026-05-01") &&
+      d <= new Date("2026-05-30T23:59:59")
+    );
+   })
+  );
     console.log("myProfile", myProfile);
 
     if (error) {
