@@ -3,66 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
-import {
-  pageWrap,
-  adminContainer,
-  shellCard,
-  topBar,
-  topButtonGroup,
-  smallLabel,
-  staffName,
-  logoutBtn,
-  heroCard,
-  heroGlow,
-  pearlBadge,
-  pearlBadgeLarge,
-  titleStyle,
-  subtitleStyle,
-  heroTitle,
-  heroSubtitle,
-  filterWrap,
-  statGrid,
-  statCard,
-  statLabel,
-  statValue,
-  sectionCard,
-  sectionTitle,
-  emptyCard,
-  summaryRowCard,
-  summaryName,
-  summaryMeta,
-  summaryMetaItem,
-  summaryMetaLabel,
-  summaryMetaValue,
-  logCard,
-  logHeader,
-  logStaffName,
-  logStaffSub,
-  logRow,
-  logLabel,
-  logValue,
-  actionRow,
-  imageGrid,
-  imageCard,
-  imageLabel,
-  previewImage,
-  emptyPhoto,
-  labelStyle,
-  inputStyle,
-  mainBlueBtn,
-  softPearlBtn,
-  filterBtn,
-  activeFilterBtn,
-  smallBlueBtn,
-  smallDeleteBtn,
-  smallSaveBtn,
-  smallCancelBtn,
-  mutedBox,
-  rowCard,
-  strongText,
-  mutedText,
-  exportBtn,
-} from "./styles/adminStyles";
+
 
 type AttendanceRow = {
   id: number;
@@ -205,7 +146,7 @@ const handleDeleteHoliday = async (id: number) => {
       await loadProfiles();
       await loadHolidays();
       if (profile?.branch) {
-        await loadLogs(profile.branch);
+        await loadLogs();
     }
     setLoading(false);
   };
@@ -247,25 +188,34 @@ const handleDeleteHoliday = async (id: number) => {
     setProfiles(data || []);
   };
 
-  const loadLogs = async (branch: string) => {
-    const { data, error } = await supabase
-      .from("attendance_logs")
-      .select("*")
-      .eq("branch", branch)
-      .order("created_at", { ascending: false })
+   const loadLogs = async () => {
+    const query = supabase
+    .from("attendance_logs")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+    if (myProfile?.branch) {
+    query.eq("branch", myProfile.branch);
+    }
+
+    const { data, error } = await query;
+    console.log("attendance error", error);
+    console.log("attendance rows", data);
+    console.log("myProfile", myProfile);
+
     if (error) {
-      console.log("Logs error:", error);
-      return;
+    console.error("Logs error:", error);
+    return;
     }
 
     const merged =
-      data?.map((log) => ({
-        ...log,
-        profile: profiles.find((p) => p.id === log.user_id) || null,
-      })) || [];
+    (data || []).map((log) => ({
+      ...log,
+      profile: profiles.find((p) => p.id === log.user_id) || null,
+    }));
 
-    setLogs(merged);
-  };
+   setLogs(merged);
+};
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -948,3 +898,492 @@ const handleDeleteHoliday = async (id: number) => {
       </div>
   );
 }
+const pageWrap: React.CSSProperties = {
+  minHeight: "100vh",
+  padding: 18,
+  background:
+    "linear-gradient(180deg, #dff4ff 0%, #cdefff 24%, #b7e4fa 55%, #eef8ff 100%)",
+  fontFamily: "'Georgia', 'Times New Roman', serif",
+  display: "flex",
+  justifyContent: "center",
+};
+
+const adminContainer: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 980,
+  padding: 6,
+};
+
+const shellCard: React.CSSProperties = {
+  width: "100%",
+  maxWidth: 460,
+  marginTop: 40,
+  background: "rgba(255,255,255,0.68)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  border: "1px solid rgba(255,255,255,0.6)",
+  boxShadow: "0 20px 60px rgba(67, 143, 184, 0.18)",
+  borderRadius: 28,
+  padding: 28,
+};
+
+const topBar: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 18,
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const topButtonGroup: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const smallLabel: React.CSSProperties = {
+  fontSize: 12,
+  color: "#5d7c8d",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+};
+
+const staffName: React.CSSProperties = {
+  fontSize: 22,
+  color: "#15384b",
+  fontWeight: 700,
+};
+
+const logoutBtn: React.CSSProperties = {
+  border: "none",
+  background: "rgba(255,255,255,0.65)",
+  color: "#22506a",
+  borderRadius: 999,
+  padding: "10px 14px",
+  fontSize: 14,
+  boxShadow: "0 8px 20px rgba(84, 140, 170, 0.14)",
+  cursor: "pointer",
+};
+
+const heroCard: React.CSSProperties = {
+  position: "relative",
+  overflow: "hidden",
+  background:
+    "linear-gradient(135deg, rgba(255,255,255,0.85), rgba(222,245,255,0.9), rgba(181,227,248,0.95))",
+  borderRadius: 28,
+  padding: "28px 22px",
+  boxShadow: "0 18px 40px rgba(61, 128, 164, 0.18)",
+  border: "1px solid rgba(255,255,255,0.65)",
+  textAlign: "center",
+};
+
+const heroGlow: React.CSSProperties = {
+  position: "absolute",
+  width: 180,
+  height: 180,
+  right: -50,
+  top: -60,
+  borderRadius: "50%",
+  background: "rgba(255,255,255,0.55)",
+  filter: "blur(10px)",
+};
+
+const pearlBadge: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: "50%",
+  background: "linear-gradient(135deg, #fefefe, #e8f7ff, #d8edf8)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#79a7bc",
+  fontSize: 24,
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.16)",
+  marginBottom: 18,
+};
+
+const pearlBadgeLarge: React.CSSProperties = {
+  width: 68,
+  height: 68,
+  borderRadius: "50%",
+  margin: "0 auto 14px auto",
+  background: "linear-gradient(135deg, #ffffff, #e8f7ff, #cfe8f6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#7ca8bc",
+  fontSize: 34,
+  boxShadow: "0 14px 32px rgba(85, 145, 177, 0.18)",
+};
+
+const titleStyle: React.CSSProperties = {
+  margin: "0 0 8px 0",
+  fontSize: 34,
+  color: "#15384b",
+  textAlign: "center",
+  fontWeight: 700,
+};
+
+const subtitleStyle: React.CSSProperties = {
+  margin: "0 0 24px 0",
+  color: "#5f7d8e",
+  textAlign: "center",
+  fontSize: 15,
+  lineHeight: 1.5,
+};
+
+const heroTitle: React.CSSProperties = {
+  margin: 0,
+  fontSize: 34,
+  color: "#14384b",
+  fontWeight: 700,
+};
+
+const heroSubtitle: React.CSSProperties = {
+  margin: "10px 0 0 0",
+  color: "#557589",
+  fontSize: 16,
+  lineHeight: 1.5,
+};
+
+const filterWrap: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  marginTop: 18,
+  marginBottom: 18,
+};
+
+const statGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 12,
+  marginTop: 4,
+};
+
+const statCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 20,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const statLabel: React.CSSProperties = {
+  fontSize: 13,
+  color: "#67859a",
+  marginBottom: 6,
+};
+
+const statValue: React.CSSProperties = {
+  fontSize: 22,
+  color: "#173b4d",
+  fontWeight: 700,
+  lineHeight: 1.3,
+};
+
+const sectionCard: React.CSSProperties = {
+  marginTop: 18,
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 24,
+  padding: 18,
+  border: "1px solid rgba(255,255,255,0.65)",
+  boxShadow: "0 10px 24px rgba(93, 146, 172, 0.10)",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontSize: 22,
+  color: "#173b4d",
+  fontWeight: 700,
+  marginBottom: 10,
+};
+
+const emptyCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.72)",
+  borderRadius: 18,
+  padding: 18,
+  color: "#5e7d90",
+  border: "1px solid rgba(255,255,255,0.65)",
+};
+
+const summaryRowCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.78)",
+  borderRadius: 20,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.7)",
+  boxShadow: "0 12px 28px rgba(87, 145, 175, 0.10)",
+};
+
+const summaryName: React.CSSProperties = {
+  fontSize: 18,
+  fontWeight: 700,
+  color: "#173b4d",
+  marginBottom: 10,
+};
+
+const summaryMeta: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: 10,
+};
+
+const summaryMetaItem: React.CSSProperties = {
+  background: "rgba(244,251,255,0.9)",
+  borderRadius: 16,
+  padding: 12,
+};
+
+const summaryMetaLabel: React.CSSProperties = {
+  display: "block",
+  fontSize: 12,
+  color: "#66849a",
+  marginBottom: 4,
+};
+
+const summaryMetaValue: React.CSSProperties = {
+  fontSize: 15,
+  color: "#173b4d",
+  fontWeight: 700,
+};
+
+const logCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.78)",
+  borderRadius: 22,
+  padding: 16,
+  border: "1px solid rgba(255,255,255,0.7)",
+  boxShadow: "0 12px 28px rgba(87, 145, 175, 0.10)",
+};
+
+const logHeader: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 12,
+};
+
+const logStaffName: React.CSSProperties = {
+  fontSize: 20,
+  fontWeight: 700,
+  color: "#173b4d",
+};
+
+const logStaffSub: React.CSSProperties = {
+  fontSize: 13,
+  color: "#68859a",
+  marginTop: 3,
+};
+
+const logRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "8px 0",
+  borderBottom: "1px solid rgba(204, 228, 240, 0.7)",
+};
+
+const logLabel: React.CSSProperties = {
+  color: "#557389",
+  fontWeight: 700,
+  fontSize: 14,
+};
+
+const logValue: React.CSSProperties = {
+  color: "#183b4d",
+  fontSize: 14,
+  textAlign: "right",
+  maxWidth: "58%",
+};
+
+const actionRow: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+  marginTop: 14,
+};
+
+const imageGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: 14,
+  marginTop: 16,
+};
+
+const imageCard: React.CSSProperties = {
+  background: "rgba(244,251,255,0.88)",
+  borderRadius: 18,
+  padding: 12,
+};
+
+const imageLabel: React.CSSProperties = {
+  color: "#557389",
+  fontWeight: 700,
+  marginBottom: 8,
+  fontSize: 14,
+};
+
+const previewImage: React.CSSProperties = {
+  width: "100%",
+  borderRadius: 18,
+  display: "block",
+  boxShadow: "0 12px 30px rgba(96, 145, 171, 0.12)",
+};
+
+const emptyPhoto: React.CSSProperties = {
+  width: "100%",
+  minHeight: 180,
+  borderRadius: 12,
+  border: "1px dashed #c8dfea",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "#666",
+  background: "#fafafa",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: 8,
+  color: "#456579",
+  fontSize: 14,
+  fontWeight: 700,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: 14,
+  borderRadius: 16,
+  border: "1px solid rgba(149, 194, 214, 0.8)",
+  background: "rgba(255,255,255,0.88)",
+  outline: "none",
+  fontSize: 15,
+  color: "#15384b",
+  boxSizing: "border-box",
+};
+
+const mainBlueBtn: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  borderRadius: 18,
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  fontSize: 17,
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(37, 116, 160, 0.24)",
+  cursor: "pointer",
+};
+
+const softPearlBtn: React.CSSProperties = {
+  width: "100%",
+  border: "none",
+  borderRadius: 18,
+  padding: "16px 18px",
+  background: "linear-gradient(135deg, #f6fbff, #e5f4fb, #d5edf8)",
+  color: "#1b4f69",
+  fontSize: 17,
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(102, 152, 177, 0.14)",
+  cursor: "pointer",
+};
+
+const filterBtn: React.CSSProperties = {
+  border: "1px solid rgba(149, 194, 214, 0.85)",
+  background: "rgba(255,255,255,0.82)",
+  color: "#24516a",
+  borderRadius: 999,
+  padding: "10px 16px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 8px 20px rgba(93, 146, 172, 0.08)",
+};
+
+const activeFilterBtn: React.CSSProperties = {
+  border: "1px solid rgba(53, 132, 178, 0.95)",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  borderRadius: 999,
+  padding: "10px 16px",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 10px 24px rgba(37, 116, 160, 0.18)",
+};
+
+const smallBlueBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #4aa6d8, #2f8cc4, #2277a9)",
+  color: "white",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const smallDeleteBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #f07b7b, #d95353)",
+  color: "white",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const smallSaveBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #59b9e6, #2f8cc4)",
+  color: "white",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const smallCancelBtn: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: "none",
+  background: "linear-gradient(135deg, #f6fbff, #e5f4fb, #d5edf8)",
+  color: "#1b4f69",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+const mutedBox: React.CSSProperties = {
+  padding: 14,
+  borderRadius: 14,
+  background: "rgba(242,247,250,0.9)",
+  color: "#678194",
+};
+
+const rowCard: React.CSSProperties = {
+  background: "rgba(248,252,255,0.95)",
+  borderRadius: 18,
+  padding: 14,
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const strongText: React.CSSProperties = {
+  fontWeight: 700,
+  color: "#173b4d",
+};
+
+const mutedText: React.CSSProperties = {
+  color: "#6a8597",
+  fontSize: 14,
+};
+const exportBtn: React.CSSProperties = {
+  padding: "10px 18px",
+  borderRadius: 14,
+  border: "none",
+  background: "linear-gradient(135deg, #8ec5fc 0%, #e0c3fc 100%)",
+  color: "#0f2a3a",
+  fontWeight: 700,
+  cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+};
