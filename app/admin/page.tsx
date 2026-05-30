@@ -193,8 +193,10 @@ const handleDeleteHoliday = async (id: number) => {
     .order("created_at", { ascending: false });
 
     if (myProfile?.branch) {
-    query.eq("branch", myProfile.branch);
-    }
+    query.or(
+    `branch.eq.${myProfile.branch},branch.is.null`
+    );
+   }
 
     const { data, error } = await query;
     console.log("attendance error", error);
@@ -376,6 +378,8 @@ const handleDeleteHoliday = async (id: number) => {
     const name = log.profile?.name || "Unknown staff";
     const hourlyRate = Number(log.profile?.hourly_rate || 25000);
     const logDate = log.check_in_time
+   ? new Date(log.check_in_time).toISOString().split("T")[0]
+   : null;
     const matchedHoliday = holidays.find(
      (holiday) => holiday.holiday_date === logDate
 
