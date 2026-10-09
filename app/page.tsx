@@ -229,10 +229,14 @@ export default function Home() {
   }
   const now = new Date();
   const hour = now.getHours() + now.getMinutes() / 60;
-  const isLate = hour > 9 || (hours === 9 && minutes >5);
-  if (profile?.role !== "admin" && (hour < 9 || hour > 21.5)) {
-  alert("Check-in only allowed between 09:00 and 21:30");
-  return;
+  const currentMinutes = hour * 60 + minutes;
+  const isLate = currentMinutes > 9 * 60;
+  if (
+  profile?.role !== "admin" &&
+  (currentMinutes < 8 * 60 + 30 || currentMinutes > 21 * 60 + 30)
+  ) {
+     alert("Check-in only allowed between 08:30 and 21:30");
+     return;
   }
   if (activeShift) {
     alert("You are already checked in.");
